@@ -87,7 +87,9 @@ jobs:
           GOARCH: ${{ matrix.arch }}
           CC: ${{ matrix.cc }}
           CGO_ENABLED: 1
-        run: task build:${{ matrix.os }}
+        run: |
+          task docker:build-image
+          task docker:build-${{ matrix.os }}
 
       - name: Get version
         id: get_version
