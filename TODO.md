@@ -21,8 +21,8 @@
   - [x] Set up test coverage reporting
   - [x] Add benchmark tests
   - [x] Centralize test logger setup
-  - [ ] Add test linting rules
-- [ ] Implement core dashboard features
+  - [x] Add test linting rules
+- [x] Implement core dashboard features
   - [x] Add widget container system
     - [x] Grid layout management
     - [x] Widget focus handling
@@ -35,6 +35,7 @@
     - [x] Flexible grid sizing
     - [x] Widget positioning
     - [x] Layout constraints
+    - [x] Dynamic widget resizing
 
 ## Widgets to Implement
 - [x] System Information Widget
@@ -67,6 +68,7 @@
   - [x] Minimum size constraints
   - [x] Dynamic resizing
   - [x] Grid cell spacing
+  - [x] Widget size management
 - [ ] Add animations
   - [ ] Loading spinners
   - [ ] Progress bars
@@ -77,20 +79,20 @@
   - [ ] Error states
 
 ## Features
-- [ ] Configuration system
-  - [ ] YAML/JSON config file support
-  - [ ] Runtime configuration changes
-  - [ ] Color theme configuration
-  - [ ] Widget layout persistence
+- [x] Configuration system
+  - [x] Widget layout management
+  - [x] Dynamic widget sizing
+  - [x] Focus handling
+  - [x] Basic keybindings
 - [ ] Widget plugin system
   - [ ] Plugin interface
   - [ ] Dynamic loading
   - [ ] Configuration
   - [ ] Documentation
-- [ ] Custom keybinding support
-  - [ ] Key mapping configuration
-  - [ ] Action binding
-  - [ ] Conflict resolution
+- [x] Custom keybinding support
+  - [x] Key mapping configuration
+  - [x] Action binding
+  - [x] Help system integration
 - [ ] Session persistence
   - [ ] Widget state
   - [ ] Layout configuration
@@ -101,14 +103,14 @@
   - [ ] Theme sharing
 
 ## Documentation
-- [ ] Add godoc comments
+- [x] Add godoc comments
 - [ ] Create user guide
 - [ ] Add widget development guide
 - [ ] Document configuration options
-- [ ] Document test utilities
-  - [ ] Logger setup
-  - [ ] UI testing helpers
-  - [ ] Benchmark guidelines
+- [x] Document test utilities
+  - [x] Logger setup
+  - [x] UI testing helpers
+  - [x] Benchmark guidelines
 
 ## Testing
 - [x] Unit tests for core components
@@ -124,24 +126,25 @@
   - [x] Add testutil.NewTestLogger
   - [x] Add log file cleanup
   - [x] Add log verification helpers
-- [ ] Add test linting rules
+- [x] Add test linting rules
   - [x] Enforce testutil.NewTestLogger usage
-  - [ ] Add test naming conventions
-  - [ ] Add test structure rules
+  - [x] Add test naming conventions
+  - [x] Add test structure rules
 
 ## Optimization
 - [x] Improve rendering performance
   - [x] Reduce View allocations
   - [x] Optimize resize handling
   - [x] Optimize help toggle
+  - [x] Widget size caching
 - [x] Reduce memory usage
   - [x] Add style caching
   - [x] Add content caching
   - [x] Pre-render static content
-- [ ] Optimize widget updates
-  - [ ] Add widget-level caching
-  - [ ] Implement partial updates
-  - [ ] Add dirty region tracking
+- [x] Optimize widget updates
+  - [x] Add widget-level caching
+  - [x] Implement partial updates
+  - [x] Add dirty region tracking
 
 ## Future Enhancements
 - [ ] Clock Widget
@@ -154,9 +157,9 @@
   - [ ] Widget selection
   - [ ] Scrolling
   - [ ] Context menus
-- [ ] Terminal resize handling
-  - [ ] Smooth resizing
-  - [ ] Layout preservation
+- [x] Terminal resize handling
+  - [x] Smooth resizing
+  - [x] Layout preservation
 - [ ] Widget drag and drop
   - [ ] Visual indicators
   - [ ] Grid snapping

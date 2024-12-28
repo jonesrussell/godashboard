@@ -8,27 +8,31 @@ A terminal-based system dashboard built with Go, featuring real-time system moni
   - CPU usage with visual progress bars
   - Memory usage tracking
   - Disk space monitoring
-- Grid-based widget layout
-  - Flexible positioning
-  - Dynamic resizing
-  - Focus management
+- Advanced widget system
+  - Grid-based layout with dynamic sizing
+  - Flexible widget positioning
+  - Automatic size constraints
+  - Focus management with keyboard navigation
 - Modern terminal UI
-  - Smooth updates
-  - Keyboard navigation
-  - Color themes
+  - Smooth updates and resizing
+  - Keyboard navigation with help system
+  - Color themes with focus indicators
+  - Responsive layout handling
 - Performance optimized
-  - Style caching
-  - Content caching
-  - Minimal allocations
+  - Style and content caching
+  - Minimal memory allocations
+  - Efficient widget updates
+  - Smart resize handling
 - Structured logging
-  - Zap-based logging
-  - Log rotation
-  - Debug output
+  - Zap-based logging with rotation
+  - Debug output support
+  - Comprehensive test logging
+  - Request tracking
 - Comprehensive testing
-  - Unit tests
-  - Integration tests
+  - Unit and integration tests
   - Performance benchmarks
-  - Test utilities
+  - Test utilities and helpers
+  - Standardized logging
 
 ## Prerequisites
 
@@ -77,6 +81,7 @@ task run-external
 - `Enter` - Select/activate widget
 - `q` or `Ctrl+C` - Quit
 - `?` - Toggle help
+- `d` - Toggle debug mode
 
 ## Development
 
@@ -147,6 +152,28 @@ func TestMyFeature(t *testing.T) {
     content, err := testutil.ReadLogFile(logPath)
     require.NoError(t, err)
     assert.Contains(t, content, "Test started")
+}
+```
+
+### Widget Development
+
+Widgets must implement the `components.Widget` interface:
+
+```go
+type Widget interface {
+    // Core Bubbletea interface
+    Init() tea.Cmd
+    Update(msg tea.Msg) (Widget, tea.Cmd)
+    View() string
+
+    // Size management
+    SetSize(width, height int)
+    GetDimensions() (width, height int)
+
+    // Focus management
+    Focus()
+    Blur()
+    IsFocused() bool
 }
 ```
 

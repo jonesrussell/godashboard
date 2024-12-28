@@ -7,16 +7,19 @@ code_style:
 - rules:
   - use_constants_for_magic_numbers: true
   - document_all_exported_symbols: true
+  - widget_interface_compliance: true
+  - focus_management_patterns: true
 
 lifecycle_management:
 - description: "Use Bubbletea's built-in lifecycle management."
 - signal_handling: [ SIGINT, SIGTERM ]
-- key_event_handling: [ q, ctrl+c ]
+- key_event_handling: [ q, ctrl+c, d ]
 - cleanup_responsibilities:
   - logger: "Flush on exit"
   - ui: "Handled by Bubbletea"
   - terminal: "Restored by Bubbletea"
   - components: "Use Init/Update for setup/teardown"
+  - widgets: "Implement proper cleanup in Blur"
 
 dependency_injection:
 - description: "Use Wire for dependency injection."
@@ -34,6 +37,7 @@ logging:
 - use_test_utilities:
   - new_test_logger: "testutil.NewTestLogger"
   - read_log_file: "testutil.ReadLogFile"
+  - verify_log_content: "testutil.VerifyLogContent"
 
 ui_components:
 - description: "Use Bubbletea and Lipgloss for terminal UI and styling."
@@ -42,11 +46,15 @@ ui_components:
   - horizontal_vertical_layout: true
   - focus_based_styling: true
   - minimum_size_constraints: true
+  - dynamic_resizing: true
+  - widget_caching: true
 
 component_design:
 - principles: [ SRP, DRY, ISP ]
 - base_widget:
   - responsibilities: [ dimension_management, focus_state_management, style_selection, default_command_handling ]
+  - size_management: [ min_size, dynamic_resize, content_flow ]
+  - focus_handling: [ focus_state, focus_indicators, keyboard_nav ]
 - interface_segmentation:
   - widget: "Core component interface (Init/Update/View)"
   - focusable: "Focus management (Focus/Blur/IsFocused)"
@@ -58,6 +66,11 @@ performance:
   - view_rendering: "< 1ms"
   - memory_allocations: "< 1KB/op"
   - cpu_usage: "< 5%"
+- optimizations:
+  - style_caching: true
+  - content_caching: true
+  - partial_updates: true
+  - size_caching: true
 
 testing:
 - categories:
@@ -68,12 +81,21 @@ testing:
   - core_logic: "> 80%"
   - ui_components: "> 70%"
   - integration_paths: "> 60%"
+- test_utilities:
+  - logger: "testutil.NewTestLogger"
+  - ui_testing: "testutil.NewUITest"
+  - log_verification: "testutil.ReadLogFile"
 
 documentation:
 - document_all_exported_symbols: true
 - package_documentation: true
 - include_examples: true
 - keep_line_length_under: 100
+- widget_development:
+  - interface_requirements: true
+  - size_management: true
+  - focus_handling: true
+  - update_patterns: true
 
 error_handling:
 - description: "Return errors, don't panic."
@@ -82,9 +104,17 @@ error_handling:
 - provide_user_feedback: true
 - handle_edge_cases: true
 - validate_inputs: true
+- size_validation:
+  - minimum_dimensions: true
+  - overflow_protection: true
 
 file_organization:
 - directories: [ "/cmd", "/internal", "/pkg", "/docs", "/test", "/scripts", "/configs" ]
+- widget_structure:
+  - interface: "components/widget.go"
+  - implementation: "widgets/{type}/widget.go"
+  - styles: "styles/{widget}.go"
+  - tests: "widgets/{type}/widget_test.go"
 
 deprecation_handling:
 - use_latest_apis: true
@@ -107,3 +137,11 @@ linting_rules:
   - languages: [ go ]
   - paths:
       include: [ "**/*_test.go" ]
+- widget_rules:
+  - id: implement-widget-interface
+  - pattern: "type.*struct"
+  - message: "widgets must implement the full Widget interface"
+  - severity: error
+  - languages: [ go ]
+  - paths:
+      include: [ "**/widgets/**/*.go" ]
