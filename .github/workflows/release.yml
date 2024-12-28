@@ -7,7 +7,6 @@ on:
 
 permissions:
   contents: write
-  discussions: write
   packages: write
 
 jobs:
@@ -48,28 +47,4 @@ jobs:
           version: latest
           args: release --clean
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Create Discussion
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const tag = context.ref.replace('refs/tags/', '');
-            
-            try {
-              const release = await github.rest.repos.getRelease({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                tag_name: tag
-              });
-
-              await github.rest.discussions.create({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                category_id: "DIC_kwDOLKQXXc4CcDVS",
-                title: `Release ${tag}`,
-                body: release.data.body
-              });
-            } catch (error) {
-              console.log('Error creating discussion:', error);
-            } 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 

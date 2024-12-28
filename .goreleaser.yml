@@ -75,8 +75,5 @@ release:
   footer: |
     **Full Changelog**: https://github.com/jonesrussell/dashboard/compare/{{ .PreviousTag }}...{{ .Tag }}
 
-  discussion_category_name: Releases
-
-# Skip specific steps during development/testing
 snapshot:
   name_template: "{{ .Version }}-SNAPSHOT-{{.ShortCommit}}"
