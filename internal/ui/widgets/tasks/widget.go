@@ -59,7 +59,7 @@ func New() *Widget {
 
 // Init implements components.Widget
 func (w *Widget) Init() tea.Cmd {
-	return w.DefaultInit()
+	return w.BaseInit()
 }
 
 // Update implements components.Widget

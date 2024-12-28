@@ -14,6 +14,7 @@ func TestDashboard(t *testing.T) {
 	// Test initial state
 	assert.False(t, dash.showHelp)
 	assert.False(t, dash.debug)
-	assert.NotNil(t, dash.container)
+	assert.NotNil(t, dash.sysInfo)
+	assert.NotNil(t, dash.tasks)
 	assert.NotNil(t, dash.logger)
 }

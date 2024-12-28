@@ -91,18 +91,18 @@ func (w *Widget) View() string {
 
 // SetSize implements components.Widget
 func (w *Widget) SetSize(width, height int) {
-	w.width = width
-	w.height = height
+	w.Width = width
+	w.Height = height
 }
 
 // Focus implements components.Focusable
 func (w *Widget) Focus() {
-	w.focused = true
+	w.Focused = true
 }
 
 // Blur implements components.Focusable
 func (w *Widget) Blur() {
-	w.focused = false
+	w.Focused = false
 }
 
 // createUsageBar creates a progress bar for the given percentage

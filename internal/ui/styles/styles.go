@@ -1,7 +1,11 @@
 // Package styles provides UI styling constants and utilities for the dashboard
 package styles
 
-import "github.com/charmbracelet/lipgloss"
+import (
+	"fmt"
+
+	"github.com/charmbracelet/lipgloss"
+)
 
 // Colors defines the color palette for the dashboard
 var (
@@ -48,9 +52,52 @@ var (
 			Foreground(lipgloss.Color("#ffffff"))
 )
 
-// WithSize returns a copy of the style with the given dimensions
+// StyleCache provides caching for computed styles
+type StyleCache struct {
+	styles map[string]lipgloss.Style
+}
+
+// NewStyleCache creates a new style cache
+func NewStyleCache() *StyleCache {
+	return &StyleCache{
+		styles: make(map[string]lipgloss.Style),
+	}
+}
+
+// Get retrieves a cached style by key
+func (c *StyleCache) Get(key string) (lipgloss.Style, bool) {
+	style, ok := c.styles[key]
+	return style, ok
+}
+
+// Set stores a style in the cache
+func (c *StyleCache) Set(key string, style lipgloss.Style) {
+	c.styles[key] = style
+}
+
+// GetFocusedStyle returns the focused style for a widget
+func (c *StyleCache) GetFocusedStyle(width, height int) lipgloss.Style {
+	key := fmt.Sprintf("focused_%d_%d", width, height)
+	if style, ok := c.Get(key); ok {
+		return style
+	}
+	style := WithSize(Focused, width, height)
+	c.Set(key, style)
+	return style
+}
+
+// GetContentStyle returns the base style for a widget
+func (c *StyleCache) GetContentStyle(width, height int) lipgloss.Style {
+	key := fmt.Sprintf("content_%d_%d", width, height)
+	if style, ok := c.Get(key); ok {
+		return style
+	}
+	style := WithSize(Base, width, height)
+	c.Set(key, style)
+	return style
+}
+
+// WithSize returns a style with the specified dimensions
 func WithSize(style lipgloss.Style, width, height int) lipgloss.Style {
-	return style.Copy().
-		Width(width).
-		Height(height)
+	return style.Width(width).Height(height)
 }
