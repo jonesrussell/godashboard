@@ -20,6 +20,7 @@ type Widget struct {
 	width  int
 	height int
 	style  lipgloss.Style
+	debug  bool
 
 	// System info
 	cpuUsage    float64
@@ -64,7 +65,10 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 
 // View implements components.Widget
 func (w *Widget) View() string {
-	fmt.Printf("SysInfo Widget dimensions: width=%d, height=%d\n", w.width, w.height)
+	if w.debug {
+		fmt.Println("=== SysInfo Widget Debug ===")
+		fmt.Printf("Size: %dx%d\n", w.width, w.height)
+	}
 
 	var b strings.Builder
 	b.Grow(w.width * w.height)
@@ -83,9 +87,11 @@ func (w *Widget) View() string {
 		barWidth = 10
 	}
 
-	fmt.Printf("SysInfo progress bars width: %d\n", barWidth)
-	fmt.Printf("SysInfo values: CPU=%.1f%%, Memory=%.1f%%, Disk=%.1f%%\n",
-		w.cpuUsage, w.memoryUsage, w.diskUsage)
+	if w.debug {
+		fmt.Printf("Progress bars: width=%d\n", barWidth)
+		fmt.Printf("Values: CPU=%.1f%%, Memory=%.1f%%, Disk=%.1f%%\n",
+			w.cpuUsage, w.memoryUsage, w.diskUsage)
+	}
 
 	// Format system info with bars
 	cpuBar := createUsageBar(w.cpuUsage, barWidth)
@@ -113,7 +119,10 @@ func (w *Widget) View() string {
 	b.WriteString(diskBar)
 
 	rendered := w.style.Width(w.width).Height(w.height).Render(b.String())
-	fmt.Printf("SysInfo rendered content length: %d\n", len(rendered))
+	if w.debug {
+		fmt.Printf("Rendered content length: %d\n", len(rendered))
+		fmt.Println("=== End SysInfo Debug ===")
+	}
 	return rendered
 }
 
@@ -195,4 +204,9 @@ func createUsageBar(percent float64, width int) string {
 		lipgloss.NewStyle().Foreground(styles.Subtle).Render(strings.Repeat("░", empty))
 
 	return bar
+}
+
+// EnableDebug enables debug output
+func (w *Widget) EnableDebug() {
+	w.debug = true
 }

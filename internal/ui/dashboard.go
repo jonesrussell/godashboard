@@ -63,6 +63,7 @@ type Dashboard struct {
 	width    int
 	height   int
 	showHelp bool
+	debug    bool
 
 	// Cached styles
 	headerStyle lipgloss.Style
@@ -77,6 +78,17 @@ type Dashboard struct {
 
 	// Widget container
 	container *container.Container
+}
+
+// EnableDebug enables debug output
+func (d *Dashboard) EnableDebug() {
+	d.debug = true
+	d.container.EnableDebug()
+	if widget := d.container.FocusedWidget(); widget != nil {
+		if debuggable, ok := widget.(interface{ EnableDebug() }); ok {
+			debuggable.EnableDebug()
+		}
+	}
 }
 
 // NewDashboard creates a new dashboard instance
@@ -110,7 +122,7 @@ func NewDashboard() *Dashboard {
 		Col:      0,
 		RowSpan:  1,
 		ColSpan:  2,
-		MinWidth: 40,
+		MinWidth: 80,
 	})
 
 	return d
@@ -153,9 +165,9 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		d.needsRefresh = true
 
 		// Update container size
-		contentHeight := d.height - 6 // Account for header and footer
+		contentHeight := d.height - 4
 		if _, cmd := d.container.Update(tea.WindowSizeMsg{
-			Width:  d.width - 4,
+			Width:  d.width - 2,
 			Height: contentHeight,
 		}); cmd != nil {
 			return d, cmd
@@ -170,8 +182,11 @@ func (d *Dashboard) View() string {
 	var b strings.Builder
 	b.Grow(d.width * d.height)
 
-	// Log dimensions
-	fmt.Printf("Dashboard dimensions: width=%d, height=%d\n", d.width, d.height)
+	// Debug header
+	if d.debug {
+		fmt.Println("\n=== Dashboard Debug ===")
+		fmt.Printf("Window size: %dx%d\n", d.width, d.height)
+	}
 
 	// Add header
 	b.WriteString(d.headerContent)
@@ -182,7 +197,9 @@ func (d *Dashboard) View() string {
 		contentStyle := d.styleCache.GetContentStyle(d.width-4, d.height-6)
 		b.WriteString(contentStyle.Render("Welcome to the dashboard!"))
 	} else {
-		fmt.Printf("Container dimensions: width=%d, height=%d\n", d.width-4, d.height-6)
+		if d.debug {
+			fmt.Printf("Content area: %dx%d\n", d.width-4, d.height-6)
+		}
 		b.WriteString(d.container.View())
 	}
 	b.WriteByte('\n')
@@ -194,6 +211,9 @@ func (d *Dashboard) View() string {
 		b.WriteString(d.footerContent)
 	}
 
+	if d.debug {
+		fmt.Println("=== End Debug ===")
+	}
 	return b.String()
 }
 

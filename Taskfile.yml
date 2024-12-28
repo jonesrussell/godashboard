@@ -101,3 +101,9 @@ tasks:
     cmds:
     - go mod download
     - go mod tidy
+
+  run-debug:
+    desc: Run the application with debug output
+    deps: [ build ]
+    cmds:
+    - build/dashboard.exe -debug

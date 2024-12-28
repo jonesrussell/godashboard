@@ -34,6 +34,7 @@ type Container struct {
 	height int
 	rows   int
 	cols   int
+	debug  bool
 
 	// Widget management
 	widgets    []WidgetEntry
@@ -147,12 +148,18 @@ func (c *Container) View() string {
 		return "No widgets"
 	}
 
-	// Calculate grid dimensions with spacing
-	cellWidth := (c.width - 4 - (c.cols-1)*2) / c.cols   // Account for spacing between cells
-	cellHeight := (c.height - 4 - (c.rows-1)*1) / c.rows // Account for spacing between rows
+	if c.debug {
+		fmt.Println("=== Container Debug ===")
+	}
 
-	fmt.Printf("Grid dimensions: cols=%d, rows=%d\n", c.cols, c.rows)
-	fmt.Printf("Cell dimensions: width=%d, height=%d\n", cellWidth, cellHeight)
+	// Calculate grid dimensions with spacing
+	cellWidth := (c.width - 2 - (c.cols-1)*1) / c.cols   // Reduced spacing
+	cellHeight := (c.height - 2 - (c.rows-1)*1) / c.rows // Reduced spacing
+
+	if c.debug {
+		fmt.Printf("Grid: %dx%d cells\n", c.cols, c.rows)
+		fmt.Printf("Cell size: %dx%d\n", cellWidth, cellHeight)
+	}
 
 	// Build grid view
 	var grid [][]string
@@ -163,7 +170,7 @@ func (c *Container) View() string {
 			var content string
 			for _, entry := range c.widgets {
 				if c.isWidgetInCell(entry, row, col) {
-					width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*2
+					width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*1
 					height := cellHeight*entry.Config.RowSpan + (entry.Config.RowSpan-1)*1
 
 					// Ensure minimum width
@@ -171,8 +178,10 @@ func (c *Container) View() string {
 						width = entry.Config.MinWidth
 					}
 
-					fmt.Printf("Widget at [%d,%d]: width=%d, height=%d, focused=%v\n",
-						row, col, width, height, entry.Focused)
+					if c.debug {
+						fmt.Printf("Widget [%d,%d]: %dx%d (focused=%v)\n",
+							row, col, width, height, entry.Focused)
+					}
 
 					var style lipgloss.Style
 					if entry.Focused {
@@ -186,7 +195,9 @@ func (c *Container) View() string {
 				}
 			}
 			if content == "" {
-				fmt.Printf("Empty cell at [%d,%d]\n", row, col)
+				if c.debug {
+					fmt.Printf("Empty cell [%d,%d]\n", row, col)
+				}
 				style := c.styleCache.GetContentStyle(cellWidth, cellHeight)
 				content = style.Render("")
 			}
@@ -194,15 +205,19 @@ func (c *Container) View() string {
 
 			// Add spacing between columns
 			if col < c.cols-1 {
-				rowContent = append(rowContent, strings.Repeat(" ", 2))
+				rowContent = append(rowContent, " ") // Single space between columns
 			}
 		}
 		grid = append(grid, rowContent)
 
 		// Add spacing between rows
 		if row < c.rows-1 {
-			grid = append(grid, []string{strings.Repeat("\n", 1)})
+			grid = append(grid, []string{""}) // Single line between rows
 		}
+	}
+
+	if c.debug {
+		fmt.Println("=== End Container Debug ===")
 	}
 
 	// Render grid
@@ -316,4 +331,9 @@ func (c *Container) HandleFocusKey(msg tea.KeyMsg) bool {
 		return true
 	}
 	return false
+}
+
+// EnableDebug enables debug output
+func (c *Container) EnableDebug() {
+	c.debug = true
 }
