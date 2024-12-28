@@ -5,10 +5,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 )
 
-const defaultBaseURL = "http://localhost:8080"
+// Default configuration
+const (
+	defaultBaseURL    = "http://host.docker.internal:8080"
+	defaultAPITimeout = 10 * time.Second
+	envGodoAPIBaseURL = "GODO_API_URL"
+)
 
 // Client handles communication with the godo API
 type Client struct {
@@ -16,14 +22,44 @@ type Client struct {
 	httpClient *http.Client
 }
 
+// ClientOption allows configuring the client
+type ClientOption func(*Client)
+
+// WithBaseURL sets a custom base URL for the API
+func WithBaseURL(url string) ClientOption {
+	return func(c *Client) {
+		c.baseURL = url
+	}
+}
+
+// WithTimeout sets a custom timeout for API requests
+func WithTimeout(timeout time.Duration) ClientOption {
+	return func(c *Client) {
+		c.httpClient.Timeout = timeout
+	}
+}
+
 // NewClient creates a new godo API client
-func NewClient() *Client {
-	return &Client{
-		baseURL: defaultBaseURL,
+func NewClient(opts ...ClientOption) *Client {
+	// Get base URL from environment or use default
+	baseURL := os.Getenv(envGodoAPIBaseURL)
+	if baseURL == "" {
+		baseURL = defaultBaseURL
+	}
+
+	client := &Client{
+		baseURL: baseURL,
 		httpClient: &http.Client{
-			Timeout: 10 * time.Second,
+			Timeout: defaultAPITimeout,
 		},
 	}
+
+	// Apply options
+	for _, opt := range opts {
+		opt(client)
+	}
+
+	return client
 }
 
 // Task represents a task from the godo API

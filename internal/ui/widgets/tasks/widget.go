@@ -22,9 +22,9 @@ type Widget struct {
 }
 
 // New creates a new tasks widget
-func New() *Widget {
+func New(opts ...ClientOption) *Widget {
 	return &Widget{
-		client:   NewClient(),
+		client:   NewClient(opts...),
 		selected: -1,
 	}
 }
