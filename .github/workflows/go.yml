@@ -17,6 +17,9 @@ on:
       - '.github/workflows/go.yml'
       - 'Taskfile.yml'
 
+env:
+  IS_LOCAL: ${{ github.env.ACT }}
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -44,14 +47,17 @@ jobs:
           mkdir -p coverage
           go test -race -coverprofile=coverage/coverage.out -covermode=atomic ./...
           go tool cover -html=coverage/coverage.out -o coverage/coverage.html
-      - uses: actions/upload-artifact@v4
+      - name: Upload coverage
+        continue-on-error: true
+        uses: actions/upload-artifact@v4
         with:
           name: coverage
           path: coverage/
           compression-level: 9
 
   build:
-    needs: [lint, test]
+    needs: [lint]
+    if: always()
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -75,19 +81,16 @@ jobs:
           go-version: '1.23'
           cache: true
       
-      # Install minimal system dependencies based on target
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y ${{ matrix.deps }}
 
-      # Generate wire code
       - name: Generate Wire code
         run: |
           go install github.com/google/wire/cmd/wire@latest
           wire ./cmd/dashboard
 
-      # Build with matrix variables
       - name: Build binary
         env:
           GOOS: ${{ matrix.os }}
@@ -98,8 +101,8 @@ jobs:
           chmod +x scripts/build.sh
           ./scripts/build.sh build dashboard
 
-      # Upload artifacts with version
       - name: Upload artifact
+        continue-on-error: true
         uses: actions/upload-artifact@v4
         with:
           name: godashboard-${{ github.sha }}-${{ matrix.os }}-${{ matrix.arch }}
