@@ -18,6 +18,22 @@ tasks:
     - go install golang.org/x/tools/cmd/goimports@latest
     - go install github.com/google/wire/cmd/wire@latest
     - go install github.com/goreleaser/goreleaser@latest
+    - go install github.com/nektos/act@latest
+
+  act:
+    desc: Run GitHub Actions locally using act
+    cmds:
+    - act
+
+  act-release:
+    desc: Test the release workflow locally
+    cmds:
+    - act -W .github/workflows/release.yml --eventpath .github/workflows/release-test-event.json
+
+  act-go:
+    desc: Test the Go workflow locally
+    cmds:
+    - act -W .github/workflows/go.yml
 
   lint:
     desc: Run golangci-lint
@@ -48,8 +64,17 @@ tasks:
   build:
     desc: Build the application
     deps: [ wire ]
+    platforms:
+    - windows
+    - linux
     cmds:
-    - powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1 -BuildDir {{.BUILD_DIR}} -BinaryName {{.BINARY_NAME}}
+    - |
+      {{if eq OS "windows"}}
+      powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1 -BuildDir {{.BUILD_DIR}} -BinaryName {{.BINARY_NAME}}
+      {{else}}
+      chmod +x scripts/build.sh
+      ./scripts/build.sh {{.BUILD_DIR}} {{.BINARY_NAME}}
+      {{end}}
 
   run:
     desc: Run the application
