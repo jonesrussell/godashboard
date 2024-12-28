@@ -9,8 +9,23 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui"
 )
+
+// App represents the main application
+type App struct {
+	logger logger.Logger
+	ui     *ui.Dashboard
+}
+
+// NewApp creates a new application instance
+func NewApp(log logger.Logger) (*App, error) {
+	return &App{
+		logger: log,
+		ui:     ui.NewDashboard(),
+	}, nil
+}
 
 func openExternalWindow() error {
 	var cmd *exec.Cmd
@@ -57,15 +72,23 @@ func main() {
 		return
 	}
 
+	app, err := InitializeApp()
+	if err != nil {
+		fmt.Printf("Error initializing app: %v\n", err)
+		os.Exit(1)
+	}
+
+	app.logger.Info("Starting dashboard application")
+
 	opts := []tea.ProgramOption{
 		tea.WithAltScreen(),       // Use alternate screen buffer
 		tea.WithMouseCellMotion(), // Enable mouse support
 	}
 
-	p := tea.NewProgram(ui.NewDashboard(), opts...)
+	p := tea.NewProgram(app.ui, opts...)
 
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error running program: %v", err)
+		app.logger.Error("Error running program", logger.NewField("error", err))
 		os.Exit(1)
 	}
 }
