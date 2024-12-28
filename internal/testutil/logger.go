@@ -5,8 +5,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 
+	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -16,6 +18,38 @@ type LogEntry struct {
 	Timestamp string                 `json:"timestamp"`
 	Message   string                 `json:"msg"`
 	Fields    map[string]interface{} `json:"-"`
+}
+
+// NewTestLogger creates a new logger for testing
+// For benchmarks, it uses a temporary file in the system temp directory
+func NewTestLogger(tb testing.TB, name string) (logger.Logger, string) {
+	tb.Helper()
+	var logPath string
+	if b, ok := tb.(*testing.B); ok {
+		// For benchmarks, use system temp dir
+		logPath = filepath.Join(os.TempDir(), "bench-"+b.Name()+"-"+name+".log")
+	} else {
+		// For tests, use test-specific temp dir
+		logPath = filepath.Join(tb.TempDir(), name+".log")
+	}
+
+	cfg := logger.Config{
+		Level:      "debug",
+		OutputPath: logPath,
+		MaxSize:    1,
+		MaxBackups: 0,
+		MaxAge:     1,
+		Compress:   false,
+		Debug:      true,
+	}
+	log, err := logger.NewZapLogger(cfg)
+	if err != nil {
+		tb.Fatal(err)
+	}
+	tb.Cleanup(func() {
+		_ = os.Remove(logPath)
+	})
+	return log, logPath
 }
 
 // ParseLogEntry parses a JSON log entry from a buffer

@@ -4,18 +4,21 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jonesrussell/dashboard/internal/testutil"
 )
 
 func BenchmarkDashboardInit(b *testing.B) {
+	log, _ := testutil.NewTestLogger(b, "bench-init")
 	b.ReportAllocs()
 	for i := 0; i < b.N; i++ {
-		dashboard := NewDashboard()
+		dashboard := NewDashboard(log)
 		_ = dashboard.Init()
 	}
 }
 
 func BenchmarkDashboardView(b *testing.B) {
-	dashboard := NewDashboard()
+	log, _ := testutil.NewTestLogger(b, "bench-view")
+	dashboard := NewDashboard(log)
 	// Set a reasonable size
 	dashboard.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
 
@@ -27,7 +30,8 @@ func BenchmarkDashboardView(b *testing.B) {
 }
 
 func BenchmarkDashboardUpdate(b *testing.B) {
-	dashboard := NewDashboard()
+	log, _ := testutil.NewTestLogger(b, "bench-update")
+	dashboard := NewDashboard(log)
 	msgs := []tea.Msg{
 		tea.WindowSizeMsg{Width: 80, Height: 24},
 		tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune("?")},
@@ -44,7 +48,8 @@ func BenchmarkDashboardUpdate(b *testing.B) {
 }
 
 func BenchmarkDashboardResize(b *testing.B) {
-	dashboard := NewDashboard()
+	log, _ := testutil.NewTestLogger(b, "bench-resize")
+	dashboard := NewDashboard(log)
 	sizes := []tea.WindowSizeMsg{
 		{Width: 80, Height: 24},  // Standard
 		{Width: 120, Height: 40}, // Large
@@ -63,7 +68,8 @@ func BenchmarkDashboardResize(b *testing.B) {
 }
 
 func BenchmarkDashboardHelpToggle(b *testing.B) {
-	dashboard := NewDashboard()
+	log, _ := testutil.NewTestLogger(b, "bench-help")
+	dashboard := NewDashboard(log)
 	// Initial setup
 	dashboard.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
 

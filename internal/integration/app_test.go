@@ -12,11 +12,7 @@ import (
 
 // TestAppInitialization verifies that the application initializes correctly
 func TestAppInitialization(t *testing.T) {
-	// Initialize logger
-	cfg := logger.DefaultConfig()
-	cfg.OutputPath = t.TempDir() + "/test.log" // Use test-specific log file
-	log, err := logger.ProvideLogger(cfg)
-	require.NoError(t, err)
+	log, _ := testutil.NewTestLogger(t, "init")
 
 	// Log test start
 	log.Info("Starting app initialization test",
@@ -24,7 +20,7 @@ func TestAppInitialization(t *testing.T) {
 		logger.NewField("logger", "configured"))
 
 	// Initialize dashboard
-	dashboard := ui.NewDashboard()
+	dashboard := ui.NewDashboard(log)
 	require.NotNil(t, dashboard)
 	log.Info("Dashboard initialized")
 
@@ -51,12 +47,7 @@ func TestAppInitialization(t *testing.T) {
 
 // TestAppLogging verifies that logging works throughout the application
 func TestAppLogging(t *testing.T) {
-	// Create a test-specific log file
-	logPath := t.TempDir() + "/app.log"
-	cfg := logger.DefaultConfig()
-	cfg.OutputPath = logPath
-	log, err := logger.ProvideLogger(cfg)
-	require.NoError(t, err)
+	log, logPath := testutil.NewTestLogger(t, "logging")
 
 	// Log some test messages
 	log.Info("Application starting", logger.NewField("test", true))
@@ -74,8 +65,10 @@ func TestAppLogging(t *testing.T) {
 
 // TestAppResize verifies that the application handles terminal resizing
 func TestAppResize(t *testing.T) {
+	log, _ := testutil.NewTestLogger(t, "resize")
+
 	// Initialize dashboard
-	dashboard := ui.NewDashboard()
+	dashboard := ui.NewDashboard(log)
 
 	// Create UI test helper
 	ui := testutil.NewUITest(t, dashboard).
