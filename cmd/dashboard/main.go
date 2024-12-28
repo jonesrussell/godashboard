@@ -2,59 +2,40 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
-	"os/exec"
-	"runtime"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jonesrussell/dashboard/internal/logger"
+	"github.com/jonesrussell/dashboard/internal/logger/types"
+	"github.com/jonesrussell/dashboard/internal/ui"
 )
 
 func main() {
-	// Parse command line flags
-	debug := flag.Bool("debug", false, "Run with debug output")
-	external := flag.Bool("external", false, "Run in external window")
-	flag.Parse()
-
-	if *external {
-		// Start a new process without the -external flag
-		var cmd *exec.Cmd
-		if runtime.GOOS == "windows" {
-			cmd = exec.Command("cmd", "/c", "start", os.Args[0])
-		} else {
-			cmd = exec.Command(os.Args[0])
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-		}
-		if err := cmd.Start(); err != nil {
-			fmt.Printf("Error starting external process: %v\n", err)
-			os.Exit(1)
-		}
-		return
-	}
-
-	// Initialize the dashboard
-	dashboard, err := InitializeDashboard()
+	// Initialize logger
+	log, err := logger.New(types.Config{
+		Level:      "info",
+		OutputPath: "dashboard.log",
+		MaxSize:    10,    // 10MB
+		MaxBackups: 3,     // Keep 3 backups
+		MaxAge:     7,     // 7 days
+		Compress:   true,  // Compress old files
+		Debug:      false, // Production mode
+	})
 	if err != nil {
-		fmt.Printf("Error initializing dashboard: %v\n", err)
+		fmt.Printf("Failed to initialize logger: %v\n", err)
 		os.Exit(1)
 	}
 
-	if *debug {
-		dashboard.EnableDebug()
-	}
-
-	// Create and run the program
-	p := tea.NewProgram(
-		dashboard,
-		tea.WithAltScreen(),
-		tea.WithMouseCellMotion(),
+	// Create and run the dashboard
+	dash := ui.NewDashboard(log)
+	p := tea.NewProgram(dash,
+		tea.WithAltScreen(),       // Use alternate screen buffer
+		tea.WithMouseCellMotion(), // Enable mouse support
 	)
 
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error running program: %v\n", err)
+		fmt.Printf("Error running dashboard: %v\n", err)
 		os.Exit(1)
 	}
 }

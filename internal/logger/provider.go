@@ -1,6 +1,9 @@
 package logger
 
-import "github.com/google/wire"
+import (
+	"github.com/google/wire"
+	"github.com/jonesrussell/dashboard/internal/logger/types"
+)
 
 const (
 	// DefaultMaxSize is the default maximum size in megabytes of the log file before it gets rotated
@@ -12,8 +15,8 @@ const (
 )
 
 // DefaultConfig returns the default logger configuration
-func DefaultConfig() Config {
-	return Config{
+func DefaultConfig() types.Config {
+	return types.Config{
 		Level:      "info",
 		OutputPath: "logs/app.log",
 		MaxSize:    DefaultMaxSize,    // 10MB
@@ -25,7 +28,7 @@ func DefaultConfig() Config {
 }
 
 // ProvideLogger creates a new logger instance
-func ProvideLogger(cfg Config) (Logger, error) {
+func ProvideLogger(cfg types.Config) (types.Logger, error) {
 	return NewZapLogger(cfg)
 }
 

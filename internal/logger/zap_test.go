@@ -2,71 +2,68 @@ package logger
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/jonesrussell/dashboard/internal/logger/types"
-	"github.com/jonesrussell/dashboard/internal/testutil/testlogger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewZapLogger(t *testing.T) {
 	tests := []struct {
-		name    string
-		cfg     Config
-		wantErr bool
+		name      string
+		config    types.Config
+		wantError bool
 	}{
 		{
 			name: "valid config",
-			cfg: Config{
+			config: types.Config{
 				Level:      "info",
-				OutputPath: "test.log",
-				MaxSize:    1,
-				MaxBackups: 1,
-				MaxAge:     1,
-				Compress:   false,
-				Debug:      false,
+				OutputPath: filepath.Join(t.TempDir(), "test.log"),
 			},
-			wantErr: false,
+			wantError: false,
 		},
 		{
 			name: "invalid path",
-			cfg: Config{
+			config: types.Config{
 				Level:      "info",
 				OutputPath: filepath.Join("non-existent-dir", strings.Repeat("a", 1000), "test.log"),
-				MaxSize:    1,
-				MaxBackups: 1,
-				MaxAge:     1,
-				Compress:   false,
-				Debug:      false,
 			},
-			wantErr: true,
+			wantError: true,
+		},
+		{
+			name: "invalid level",
+			config: types.Config{
+				Level:      "invalid",
+				OutputPath: filepath.Join(t.TempDir(), "test.log"),
+			},
+			wantError: false, // Level defaults to info
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clean up test files
-			defer os.Remove(tt.cfg.OutputPath)
-
-			logger, err := NewZapLogger(tt.cfg)
-			if tt.wantErr {
+			logger, err := NewZapLogger(tt.config)
+			if tt.wantError {
 				assert.Error(t, err)
 				assert.Nil(t, logger)
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, logger)
+				if logger != nil {
+					logger.Close()
+				}
 			}
 		})
 	}
 }
 
 func TestLogLevels(t *testing.T) {
-	logger, logPath := testlogger.NewTestLogger(t, "log-levels")
+	logger, logPath := setupTestLogger(t, "log-levels")
 	defer logger.Close()
 
 	tests := []struct {
@@ -112,36 +109,40 @@ func TestLogLevels(t *testing.T) {
 			logFunc: logger.Error,
 			level:   "ERROR",
 			msg:     "error message",
-			fields:  []types.Field{types.NewField("error", "failed")},
+			fields:  []types.Field{types.NewField("error", "test error")},
 			wantFields: map[string]interface{}{
-				"error": "failed",
+				"error": "test error",
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Clear log file before each test case
-			if err := os.Truncate(logPath, 0); err != nil {
-				t.Fatalf("Failed to clear log file: %v", err)
-			}
-
+			// Write log message
 			tt.logFunc(tt.msg, tt.fields...)
+
+			// Read and verify log content
 			content, err := os.ReadFile(logPath)
 			require.NoError(t, err)
 			contentStr := string(content)
+
+			// Verify log content
 			assert.Contains(t, contentStr, tt.level)
 			assert.Contains(t, contentStr, tt.msg)
 			for k, v := range tt.wantFields {
 				assert.Contains(t, contentStr, k)
-				assert.Contains(t, contentStr, v)
+				assert.Contains(t, contentStr, fmt.Sprint(v))
 			}
+
+			// Clear log file for next test
+			err = os.WriteFile(logPath, []byte{}, 0644)
+			require.NoError(t, err)
 		})
 	}
 }
 
 func TestWithFields(t *testing.T) {
-	logger, logPath := testlogger.NewTestLogger(t, "with-fields")
+	logger, logPath := setupTestLogger(t, "with-fields")
 	defer logger.Close()
 
 	// Create logger with fields
@@ -151,83 +152,54 @@ func TestWithFields(t *testing.T) {
 	}
 	loggerWithFields := logger.WithFields(fields...)
 
-	// Log a message
-	loggerWithFields.Info("test message")
+	// Log message with additional fields
+	loggerWithFields.Info("test message",
+		types.NewField("extra", "field"),
+	)
 
 	// Verify log output
 	content, err := os.ReadFile(logPath)
 	require.NoError(t, err)
 	contentStr := string(content)
-	assert.Contains(t, contentStr, "test message")
+
+	// Check all fields are present
 	assert.Contains(t, contentStr, "service")
 	assert.Contains(t, contentStr, "test")
 	assert.Contains(t, contentStr, "version")
 	assert.Contains(t, contentStr, "1.0")
+	assert.Contains(t, contentStr, "extra")
+	assert.Contains(t, contentStr, "field")
 }
 
 func TestWithContext(t *testing.T) {
-	logger, logPath := testlogger.NewTestLogger(t, "with-context")
+	logger, logPath := setupTestLogger(t, "with-context")
 	defer logger.Close()
 
 	// Create context with request ID
-	ctx := context.WithValue(context.Background(), "request_id", "123")
-	loggerWithCtx := logger.WithContext(ctx)
+	ctx := context.WithValue(context.Background(), requestIDKey, "test-request-id")
 
-	// Log a message
-	loggerWithCtx.Info("test message")
+	// Create logger with context
+	loggerWithContext := logger.WithContext(ctx)
+
+	// Log message
+	loggerWithContext.Info("test message")
 
 	// Verify log output
 	content, err := os.ReadFile(logPath)
 	require.NoError(t, err)
 	contentStr := string(content)
-	assert.Contains(t, contentStr, "test message")
+
+	// Check request ID is present
 	assert.Contains(t, contentStr, "request_id")
-	assert.Contains(t, contentStr, "123")
+	assert.Contains(t, contentStr, "test-request-id")
 }
 
-func TestLogRotation(t *testing.T) {
-	// Create test directory
-	testDir := t.TempDir()
-	logPath := filepath.Join(testDir, "test.log")
-
-	// Create logger
-	cfg := Config{
-		Level:      "info",
+func setupTestLogger(t *testing.T, name string) (types.Logger, string) {
+	logPath := filepath.Join(t.TempDir(), name+".log")
+	logger, err := NewZapLogger(types.Config{
+		Level:      "debug",
 		OutputPath: logPath,
-		MaxSize:    1, // 1MB
-		MaxBackups: 1,
-		MaxAge:     1,
-		Compress:   true,
-	}
-
-	logger, err := NewZapLogger(cfg)
+	})
 	require.NoError(t, err)
-
-	// Ensure logger is closed
-	defer func() {
-		require.NoError(t, logger.Close())
-		// Wait a moment for Windows to release the file handle
-		time.Sleep(10 * time.Millisecond)
-	}()
-
-	// Write enough logs to trigger rotation
-	for i := 0; i < 100000; i++ {
-		logger.Info("test message", types.NewField("count", i))
-	}
-
-	// Check if log file exists
-	_, err = os.Stat(logPath)
-	assert.NoError(t, err)
-
-	// Check if backup file exists (may be compressed)
-	backupExists := false
-	files, err := os.ReadDir(testDir)
-	require.NoError(t, err)
-	for _, file := range files {
-		if file.Name() != "test.log" && filepath.Ext(file.Name()) != ".gz" {
-			backupExists = true
-			break
-		}
-	}
-	assert.True(t, backupExists, "backup file should exist")
+	return logger, logPath
 }

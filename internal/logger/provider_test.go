@@ -41,7 +41,7 @@ func TestProvideLogger(t *testing.T) {
 	testLogger.Info("test message", types.NewField("test", true))
 
 	// Test with invalid config
-	invalidCfg := Config{
+	invalidCfg := types.Config{
 		Level:      "invalid",
 		OutputPath: filepath.Join("non-existent-dir", strings.Repeat("a", 1000), "test.log"),
 	}
