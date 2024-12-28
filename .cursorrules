@@ -10,6 +10,31 @@
 - Use gofmt for formatting
 - Apply golangci-lint rules
 
+## Dependency Management
+- Use wire for dependency injection
+  - Generate wire_gen.go for each package
+  - Keep providers in providers.go
+  - Define interfaces in interfaces.go
+- Prefer constructor injection over field injection
+- Use interfaces for external dependencies
+
+## Logging
+- Use uber-go/zap for logging
+  - Structured logging only
+  - No global logger instances
+  - Log levels: debug, info, warn, error
+  - Include request ID in all logs
+- Configure log rotation
+
+## Go Best Practices
+- Use context.Context in all long-running operations
+- Return errors instead of panics
+- Use meaningful variable/function names
+- Keep functions under 30 lines
+- Implement interfaces close to use
+- Use table-driven tests
+- Handle errors explicitly
+
 ## File Patterns
 - *.go: gofmt
 - go.mod: none
