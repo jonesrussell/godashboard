@@ -1,5 +1,6 @@
 # Binary output directory
 /build/
+/dist/
 
 # Go specific
 *.exe
