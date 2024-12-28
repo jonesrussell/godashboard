@@ -3,6 +3,19 @@
 ## Project Context
 - Terminal UI dashboard using Bubbletea and Lipgloss
 - Integrates with Godo for todo management
+  - Uses Godo's Todo model:
+    ```go
+    type Todo struct {
+        ID        string    `json:"id"`
+        Content   string    `json:"content"`
+        Done      bool      `json:"done"`
+        CreatedAt time.Time `json:"created_at"`
+        UpdatedAt time.Time `json:"updated_at"`
+    }
+    ```
+  - Supports basic operations: create, toggle, update
+  - Uses UUID for unique identification
+  - Tracks creation and update timestamps
 - Follows standard Go project layout
 - Uses Wire for dependency injection
 - Uses Zap for structured logging

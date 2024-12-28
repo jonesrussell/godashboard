@@ -13,6 +13,7 @@ import (
 	"github.com/jonesrussell/dashboard/internal/ui/container"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
 	"github.com/jonesrussell/dashboard/internal/ui/widgets/sysinfo"
+	"github.com/jonesrussell/dashboard/internal/ui/widgets/tasks"
 )
 
 // KeyMap defines the keybindings for the dashboard
@@ -124,8 +125,18 @@ func NewDashboard(log logger.Logger) *Dashboard {
 		Row:      0,
 		Col:      0,
 		RowSpan:  1,
-		ColSpan:  2,
-		MinWidth: 80,
+		ColSpan:  1,
+		MinWidth: 40,
+	})
+
+	// Add tasks widget
+	tasks := tasks.New()
+	d.container.AddWidgetWithConfig(tasks, container.GridConfig{
+		Row:      0,
+		Col:      1,
+		RowSpan:  2,
+		ColSpan:  1,
+		MinWidth: 40,
 	})
 
 	return d
