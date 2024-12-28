@@ -5,7 +5,9 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/jonesrussell/dashboard/internal/testutil"
 	"github.com/stretchr/testify/assert"
@@ -37,7 +39,7 @@ func TestNewZapLogger(t *testing.T) {
 			name: "invalid path",
 			cfg: Config{
 				Level:      "info",
-				OutputPath: "\x00invalid.log",
+				OutputPath: filepath.Join("non-existent-dir", strings.Repeat("a", 1000), "test.log"),
 				MaxSize:    1,
 				MaxBackups: 1,
 				MaxAge:     1,
@@ -188,31 +190,37 @@ func TestLogRotation(t *testing.T) {
 	testDir := t.TempDir()
 	logPath := filepath.Join(testDir, "test.log")
 
-	cfg := Config{
-		Level:      "info",
-		OutputPath: logPath,
-		MaxSize:    1, // 1MB
-		MaxBackups: 1,
-		MaxAge:     1,
-		Compress:   true,
-	}
+	// Create a scope for the logger to ensure it's cleaned up
+	func() {
+		cfg := Config{
+			Level:      "info",
+			OutputPath: logPath,
+			MaxSize:    1, // 1MB
+			MaxBackups: 1,
+			MaxAge:     1,
+			Compress:   true,
+		}
 
-	// Create logger
-	logger, err := NewZapLogger(cfg)
-	require.NoError(t, err)
+		// Create logger
+		logger, err := NewZapLogger(cfg)
+		require.NoError(t, err)
 
-	// Write enough logs to trigger rotation
-	for i := 0; i < 100000; i++ {
-		logger.Info("test message", NewField("count", i))
-	}
+		// Write enough logs to trigger rotation
+		for i := 0; i < 100000; i++ {
+			logger.Info("test message", NewField("count", i))
+		}
 
-	// Sync and close the logger
-	if zl, ok := logger.(*zapLogger); ok {
-		require.NoError(t, zl.logger.Sync())
-	}
+		// Sync and close the logger
+		if zl, ok := logger.(*zapLogger); ok {
+			require.NoError(t, zl.logger.Sync())
+		}
+	}()
+
+	// Give the OS a moment to release file handles
+	time.Sleep(100 * time.Millisecond)
 
 	// Check if log file exists
-	_, err = os.Stat(logPath)
+	_, err := os.Stat(logPath)
 	assert.NoError(t, err)
 
 	// Check if backup file exists (may be compressed)

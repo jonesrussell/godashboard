@@ -1,6 +1,8 @@
 package logger
 
 import (
+	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -28,7 +30,7 @@ func TestProvideLogger(t *testing.T) {
 	// Test with invalid config
 	invalidCfg := Config{
 		Level:      "invalid",
-		OutputPath: "\x00invalid.log",
+		OutputPath: filepath.Join("non-existent-dir", strings.Repeat("a", 1000), "test.log"),
 	}
 	logger, err = ProvideLogger(invalidCfg)
 	assert.Error(t, err)
