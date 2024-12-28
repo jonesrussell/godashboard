@@ -2,6 +2,8 @@
 
 A terminal-based system dashboard built with Go, featuring real-time system monitoring, todo management, and process monitoring.
 
+![Dashboard Screenshot](docs/images/dashboard.png)
+
 ## Features
 
 - Real-time system monitoring

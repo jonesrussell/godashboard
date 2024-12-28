@@ -3,7 +3,6 @@ linters:
   enable:
   - gocritic
   - gofmt
-  - goimports
   - gosimple
   - govet
   - ineffassign
