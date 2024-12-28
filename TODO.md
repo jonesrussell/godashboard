@@ -1,173 +1,129 @@
 # TODO List
 
-## High Priority
-- [x] Set up basic project structure
-  - [x] Initialize Go modules
-  - [x] Create main application structure
-  - [x] Set up basic UI framework
-- [x] Implement logging system
-  - [x] Set up zap logger configuration
-  - [x] Create logger package with interfaces
-  - [x] Implement log rotation
-  - [ ] Add request ID middleware
-  - [x] Add logging utilities and helpers
-  - [x] Wire integration
-  - [x] Centralize test logging in testutil
-- [x] Implement testing framework
-  - [x] Set up test utilities and helpers
-  - [x] Add logger package tests
-  - [x] Add UI component tests
-  - [x] Add integration tests
-  - [x] Set up test coverage reporting
-  - [x] Add benchmark tests
-  - [x] Centralize test logger setup
-  - [x] Add test linting rules
-- [x] Implement core dashboard features
-  - [x] Add widget container system
-    - [x] Grid layout management
-    - [x] Widget focus handling
-    - [x] Size calculations
-  - [x] Create widget focus management
-    - [x] Keyboard navigation
-    - [x] Focus indicators
-    - [x] Focus events
-  - [x] Implement basic layout system
-    - [x] Flexible grid sizing
-    - [x] Widget positioning
-    - [x] Layout constraints
-    - [x] Dynamic widget resizing
+## Current Sprint
+- [ ] Improve Test Coverage
+  - [ ] Dashboard Tests
+    - [ ] Add keyboard navigation tests (Tab cycling, Enter activation)
+    - [ ] Add focus management tests
+    - [ ] Add debug mode toggle tests
+    - [ ] Add error handling scenarios
+  - [ ] Widget Tests
+    - [ ] Add focus state management tests
+    - [ ] Add widget-to-widget interaction tests
+    - [ ] Add state persistence tests
+  - [ ] Integration Tests
+    - [ ] Add complete user interaction flows
+    - [ ] Add widget state change scenarios
+    - [ ] Add data update tests
+  - [ ] Performance Tests
+    - [ ] Add focus switching benchmarks
+    - [ ] Add content caching benchmarks
+    - [ ] Add widget interaction benchmarks
 
-## Widgets to Implement
-- [x] System Information Widget
-  - [x] CPU usage with progress bars
-  - [x] Memory usage with progress bars
-  - [x] Disk space with progress bars
-  - [ ] Network usage monitoring
-  - [ ] Temperature monitoring
-- [ ] Godo Integration Widget
+## Core Features (In Progress)
+- [ ] Network Monitoring
+  - [ ] Add network usage to System Info widget
+  - [ ] Add bandwidth monitoring
+  - [ ] Add network interface status
+- [ ] Process Management
+  - [ ] Process listing
+  - [ ] Resource usage per process
+  - [ ] Sort by CPU/Memory
+  - [ ] Process details view
+  - [ ] Kill process support
+- [ ] Todo Integration
   - [ ] Create new todos
   - [ ] Read/list todos with filters
   - [ ] Update todo status
   - [ ] Delete todos
   - [ ] Tag management
   - [ ] Priority handling
-- [ ] Process List Widget
-  - [ ] Process listing
-  - [ ] Resource usage per process
-  - [ ] Sort by CPU/Memory
-  - [ ] Process details view
-  - [ ] Kill process support
 
-## UI Improvements
-- [x] Add color themes
-  - [x] Primary/Secondary colors
-  - [x] Border colors
-  - [x] Text colors
-  - [x] Focus indicators
-- [x] Implement responsive layouts
-  - [x] Minimum size constraints
-  - [x] Dynamic resizing
-  - [x] Grid cell spacing
-  - [x] Widget size management
-- [ ] Add animations
-  - [ ] Loading spinners
-  - [ ] Progress bars
-  - [ ] Focus transitions
-- [ ] Create loading indicators
-  - [ ] Widget loading states
-  - [ ] Data refresh indicators
-  - [ ] Error states
-
-## Features
-- [x] Configuration system
-  - [x] Widget layout management
-  - [x] Dynamic widget sizing
-  - [x] Focus handling
-  - [x] Basic keybindings
-- [ ] Widget plugin system
-  - [ ] Plugin interface
-  - [ ] Dynamic loading
-  - [ ] Configuration
-  - [ ] Documentation
-- [x] Custom keybinding support
-  - [x] Key mapping configuration
-  - [x] Action binding
-  - [x] Help system integration
-- [ ] Session persistence
-  - [ ] Widget state
-  - [ ] Layout configuration
-  - [ ] User preferences
-- [ ] Export/Import layouts
-  - [ ] Layout serialization
-  - [ ] Config export/import
-  - [ ] Theme sharing
-
-## Documentation
-- [x] Add godoc comments
-- [ ] Create user guide
-- [ ] Add widget development guide
-- [ ] Document configuration options
-- [x] Document test utilities
-  - [x] Logger setup
-  - [x] UI testing helpers
-  - [x] Benchmark guidelines
-
-## Testing
-- [x] Unit tests for core components
-- [x] Integration tests
-- [x] Performance benchmarks
-  - [x] Dashboard initialization
-  - [x] View rendering
-  - [x] Update handling
-  - [x] Resize handling
-  - [x] Help toggle
-- [ ] Cross-platform testing
-- [x] Centralize test logging
-  - [x] Add testutil.NewTestLogger
-  - [x] Add log file cleanup
-  - [x] Add log verification helpers
-- [x] Add test linting rules
-  - [x] Enforce testutil.NewTestLogger usage
-  - [x] Add test naming conventions
-  - [x] Add test structure rules
-
-## Optimization
-- [x] Improve rendering performance
-  - [x] Reduce View allocations
-  - [x] Optimize resize handling
-  - [x] Optimize help toggle
-  - [x] Widget size caching
-- [x] Reduce memory usage
-  - [x] Add style caching
-  - [x] Add content caching
-  - [x] Pre-render static content
-- [x] Optimize widget updates
-  - [x] Add widget-level caching
-  - [x] Implement partial updates
-  - [x] Add dirty region tracking
-
-## Future Enhancements
-- [ ] Clock Widget
-  - [ ] Current time display
-  - [ ] Different time zones support
-- [ ] Network Monitor Widget
-  - [ ] Network interface status
-  - [ ] Bandwidth usage
-- [ ] Mouse support
+## UI Enhancements
+- [ ] Loading States
+  - [ ] Add loading spinners
+  - [ ] Add progress bars
+  - [ ] Add focus transitions
+  - [ ] Add widget loading states
+  - [ ] Add data refresh indicators
+  - [ ] Add error states
+- [ ] Mouse Support
   - [ ] Widget selection
   - [ ] Scrolling
   - [ ] Context menus
-- [x] Terminal resize handling
-  - [x] Smooth resizing
-  - [x] Layout preservation
-- [ ] Widget drag and drop
+- [ ] Widget Drag and Drop
   - [ ] Visual indicators
   - [ ] Grid snapping
-- [ ] Widget state persistence
-  - [ ] Configuration
-  - [ ] Layout
+  - [ ] Layout persistence
+
+## System Features
+- [ ] Plugin System
+  - [ ] Plugin interface design
+  - [ ] Dynamic loading mechanism
+  - [ ] Configuration handling
+  - [ ] Documentation
+- [ ] State Management
+  - [ ] Widget state persistence
+  - [ ] Layout configuration
   - [ ] User preferences
-- [ ] Remote data source support
-  - [ ] API integration
-  - [ ] Data caching
-  - [ ] Error handling 
+  - [ ] Theme persistence
+- [ ] Configuration
+  - [ ] Layout export/import
+  - [ ] Theme sharing
+  - [ ] Key binding customization
+
+## Documentation
+- [ ] User Documentation
+  - [ ] Create user guide
+  - [ ] Add configuration guide
+  - [ ] Add keyboard shortcut reference
+- [ ] Developer Documentation
+  - [ ] Add widget development guide
+  - [ ] Add plugin development guide
+  - [ ] Add architecture overview
+  - [ ] Add performance guidelines
+
+## Future Widgets
+- [ ] Clock Widget
+  - [ ] Current time display
+  - [ ] Different time zones
+  - [ ] Configurable formats
+- [ ] Network Monitor Widget
+  - [ ] Interface status
+  - [ ] Bandwidth graphs
+  - [ ] Connection details
+- [ ] System Monitor Widget
+  - [ ] Temperature monitoring
+  - [ ] Fan speeds
+  - [ ] Power management
+
+## Completed Features ✅
+- [x] Basic Project Structure
+  - [x] Go modules initialization
+  - [x] Application structure
+  - [x] UI framework
+- [x] Logging System
+  - [x] Zap configuration
+  - [x] Log rotation
+  - [x] Test logging
+- [x] Core Dashboard
+  - [x] Widget container
+  - [x] Focus management
+  - [x] Layout system
+- [x] System Info Widget
+  - [x] CPU usage
+  - [x] Memory usage
+  - [x] Disk space
+- [x] UI Framework
+  - [x] Color themes
+  - [x] Responsive layouts
+  - [x] Widget sizing
+- [x] Performance
+  - [x] Style caching
+  - [x] Content caching
+  - [x] Resize optimization
+- [x] Testing Framework
+  - [x] Unit tests
+  - [x] Integration tests
+  - [x] Benchmarks
+  - [x] Test utilities 
