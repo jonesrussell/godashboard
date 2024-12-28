@@ -5,6 +5,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/jonesrussell/dashboard/internal/logger/types"
 	"github.com/jonesrussell/dashboard/internal/testutil/testlogger"
 	"github.com/stretchr/testify/assert"
 )
@@ -30,14 +31,14 @@ func TestProvideLogger(t *testing.T) {
 	defer logger.Close()
 
 	// Test logging with provided logger
-	logger.Info("test message", NewField("test", true))
+	logger.Info("test message", types.NewField("test", true))
 
 	// Test with test logger
 	testLogger, _ := testlogger.NewTestLogger(t, "provider-test")
 	defer testLogger.Close()
 
 	// Test logging with test logger
-	testLogger.Info("test message", testlogger.NewField("test", true))
+	testLogger.Info("test message", types.NewField("test", true))
 
 	// Test with invalid config
 	invalidCfg := Config{

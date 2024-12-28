@@ -10,30 +10,15 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/jonesrussell/dashboard/internal/logger/types"
 )
-
-// Field represents a log field
-type Field struct {
-	Key   string
-	Value interface{}
-}
-
-// Logger is a simple logger interface for testing
-type Logger interface {
-	Debug(msg string, fields ...Field)
-	Info(msg string, fields ...Field)
-	Warn(msg string, fields ...Field)
-	Error(msg string, fields ...Field)
-	WithFields(fields ...Field) Logger
-	WithContext(ctx context.Context) Logger
-	Close() error
-}
 
 // testLogger implements Logger for testing
 type testLogger struct {
 	file   *os.File
 	mu     sync.Mutex
-	fields []Field
+	fields []types.Field
 }
 
 // Config holds logger configuration
@@ -68,7 +53,7 @@ func DefaultConfig(name string, tb testing.TB) Config {
 }
 
 // NewTestLogger creates a new logger for testing
-func NewTestLogger(tb testing.TB, name string) (Logger, string) {
+func NewTestLogger(tb testing.TB, name string) (types.Logger, string) {
 	cfg := DefaultConfig(name, tb)
 
 	// Create log directory if needed
@@ -99,12 +84,12 @@ func NewTestLogger(tb testing.TB, name string) (Logger, string) {
 	return logger, cfg.OutputPath
 }
 
-func (l *testLogger) log(level, msg string, fields ...Field) {
+func (l *testLogger) log(level, msg string, fields ...types.Field) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	// Combine logger fields with message fields
-	allFields := make([]Field, 0, len(l.fields)+len(fields))
+	allFields := make([]types.Field, 0, len(l.fields)+len(fields))
 	allFields = append(allFields, l.fields...)
 	allFields = append(allFields, fields...)
 
@@ -132,36 +117,40 @@ func (l *testLogger) log(level, msg string, fields ...Field) {
 	}
 }
 
-func (l *testLogger) Debug(msg string, fields ...Field) {
+func (l *testLogger) Debug(msg string, fields ...types.Field) {
 	l.log("DEBUG", msg, fields...)
 }
 
-func (l *testLogger) Info(msg string, fields ...Field) {
+func (l *testLogger) Info(msg string, fields ...types.Field) {
 	l.log("INFO", msg, fields...)
 }
 
-func (l *testLogger) Warn(msg string, fields ...Field) {
+func (l *testLogger) Warn(msg string, fields ...types.Field) {
 	l.log("WARN", msg, fields...)
 }
 
-func (l *testLogger) Error(msg string, fields ...Field) {
+func (l *testLogger) Error(msg string, fields ...types.Field) {
 	l.log("ERROR", msg, fields...)
 }
 
-func (l *testLogger) WithFields(fields ...Field) Logger {
+func (l *testLogger) Fatal(msg string, fields ...types.Field) {
+	l.log("FATAL", msg, fields...)
+}
+
+func (l *testLogger) WithFields(fields ...types.Field) types.Logger {
 	newLogger := &testLogger{
 		file:   l.file,
-		fields: make([]Field, 0, len(l.fields)+len(fields)),
+		fields: make([]types.Field, 0, len(l.fields)+len(fields)),
 	}
 	newLogger.fields = append(newLogger.fields, l.fields...)
 	newLogger.fields = append(newLogger.fields, fields...)
 	return newLogger
 }
 
-func (l *testLogger) WithContext(ctx context.Context) Logger {
+func (l *testLogger) WithContext(ctx context.Context) types.Logger {
 	// Extract request ID from context if available
 	if reqID, ok := ctx.Value("request_id").(string); ok {
-		return l.WithFields(NewField("request_id", reqID))
+		return l.WithFields(types.NewField("request_id", reqID))
 	}
 	return l
 }
@@ -170,9 +159,4 @@ func (l *testLogger) Close() error {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 	return l.file.Close()
-}
-
-// NewField creates a new log field
-func NewField(key string, value interface{}) Field {
-	return Field{Key: key, Value: value}
 }

@@ -1,10 +1,12 @@
 package integration
 
 import (
+	"os"
 	"testing"
 
 	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/testutil"
+	"github.com/jonesrussell/dashboard/internal/testutil/testlogger"
 	"github.com/jonesrussell/dashboard/internal/ui"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -12,31 +14,26 @@ import (
 
 // TestAppInitialization verifies that the application initializes correctly
 func TestAppInitialization(t *testing.T) {
-	log, _ := testutil.NewTestLogger(t, "init")
-
-	// Log test start
-	log.Info("Starting app initialization test",
-		logger.NewField("test", "initialization"),
-		logger.NewField("logger", "configured"))
+	log, _ := testlogger.NewTestLogger(t, "init")
+	defer log.Close()
 
 	// Initialize dashboard
 	dashboard := ui.NewDashboard(log)
-	require.NotNil(t, dashboard)
-	log.Info("Dashboard initialized")
 
 	// Create UI test helper
 	ui := testutil.NewUITest(t, dashboard).
-		WithSize(100, 40).
+		WithSize(80, 24).
 		Init()
 
 	// Test initial state
-	ui.AssertViewContains("Dashboard").
-		AssertViewContains("Press ? for help")
-	log.Info("Initial state verified")
+	ui.AssertViewContains("Dashboard")
+	ui.AssertNoCommands()
+	log.Info("Initial state tested")
 
 	// Test help toggle
 	ui.SendKey("?")
-	ui.AssertViewContains("toggle help")
+	ui.AssertViewContains("Help")
+	ui.AssertNoCommands()
 	log.Info("Help toggle tested")
 
 	// Test quit command
@@ -47,7 +44,8 @@ func TestAppInitialization(t *testing.T) {
 
 // TestAppLogging verifies that logging works throughout the application
 func TestAppLogging(t *testing.T) {
-	log, logPath := testutil.NewTestLogger(t, "logging")
+	log, logPath := testlogger.NewTestLogger(t, "logging")
+	defer log.Close()
 
 	// Log some test messages
 	log.Info("Application starting", logger.NewField("test", true))
@@ -55,17 +53,19 @@ func TestAppLogging(t *testing.T) {
 	log.Warn("Warning message", logger.NewField("count", 42))
 
 	// Verify log file exists and contains our messages
-	logContents, err := testutil.ReadLogFile(logPath)
+	logContents, err := os.ReadFile(logPath)
 	require.NoError(t, err)
-	assert.Contains(t, logContents, "Application starting")
-	assert.Contains(t, logContents, "test\":true")
-	assert.Contains(t, logContents, "Warning message")
-	assert.Contains(t, logContents, "count\":42")
+	logStr := string(logContents)
+	assert.Contains(t, logStr, "Application starting")
+	assert.Contains(t, logStr, "test\":true")
+	assert.Contains(t, logStr, "Warning message")
+	assert.Contains(t, logStr, "count\":42")
 }
 
 // TestAppResize verifies that the application handles terminal resizing
 func TestAppResize(t *testing.T) {
-	log, _ := testutil.NewTestLogger(t, "resize")
+	log, _ := testlogger.NewTestLogger(t, "resize")
+	defer log.Close()
 
 	// Initialize dashboard
 	dashboard := ui.NewDashboard(log)

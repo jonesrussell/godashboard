@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/jonesrussell/dashboard/internal/logger/types"
 	"github.com/jonesrussell/dashboard/internal/testutil/testlogger"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -70,10 +71,10 @@ func TestLogLevels(t *testing.T) {
 
 	tests := []struct {
 		name       string
-		logFunc    func(string, ...testlogger.Field)
+		logFunc    func(string, ...types.Field)
 		level      string
 		msg        string
-		fields     []testlogger.Field
+		fields     []types.Field
 		wantFields map[string]interface{}
 	}{
 		{
@@ -81,7 +82,7 @@ func TestLogLevels(t *testing.T) {
 			logFunc: logger.Debug,
 			level:   "DEBUG",
 			msg:     "debug message",
-			fields:  []testlogger.Field{testlogger.NewField("key", "value")},
+			fields:  []types.Field{types.NewField("key", "value")},
 			wantFields: map[string]interface{}{
 				"key": "value",
 			},
@@ -91,7 +92,7 @@ func TestLogLevels(t *testing.T) {
 			logFunc: logger.Info,
 			level:   "INFO",
 			msg:     "info message",
-			fields:  []testlogger.Field{testlogger.NewField("number", 42)},
+			fields:  []types.Field{types.NewField("number", 42)},
 			wantFields: map[string]interface{}{
 				"number": float64(42),
 			},
@@ -101,7 +102,7 @@ func TestLogLevels(t *testing.T) {
 			logFunc: logger.Warn,
 			level:   "WARN",
 			msg:     "warn message",
-			fields:  []testlogger.Field{testlogger.NewField("bool", true)},
+			fields:  []types.Field{types.NewField("bool", true)},
 			wantFields: map[string]interface{}{
 				"bool": true,
 			},
@@ -111,7 +112,7 @@ func TestLogLevels(t *testing.T) {
 			logFunc: logger.Error,
 			level:   "ERROR",
 			msg:     "error message",
-			fields:  []testlogger.Field{testlogger.NewField("error", "failed")},
+			fields:  []types.Field{types.NewField("error", "failed")},
 			wantFields: map[string]interface{}{
 				"error": "failed",
 			},
@@ -139,9 +140,9 @@ func TestWithFields(t *testing.T) {
 	defer logger.Close()
 
 	// Create logger with fields
-	fields := []testlogger.Field{
-		testlogger.NewField("service", "test"),
-		testlogger.NewField("version", "1.0"),
+	fields := []types.Field{
+		types.NewField("service", "test"),
+		types.NewField("version", "1.0"),
 	}
 	loggerWithFields := logger.WithFields(fields...)
 
@@ -206,7 +207,7 @@ func TestLogRotation(t *testing.T) {
 
 	// Write enough logs to trigger rotation
 	for i := 0; i < 100000; i++ {
-		logger.Info("test message", NewField("count", i))
+		logger.Info("test message", types.NewField("count", i))
 	}
 
 	// Check if log file exists

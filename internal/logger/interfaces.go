@@ -1,31 +1,17 @@
-// Package logger provides structured logging capabilities for the dashboard
+// Package logger provides logging functionality
 package logger
 
-import "context"
+import (
+	"github.com/jonesrussell/dashboard/internal/logger/types"
+)
 
-// Logger defines the interface for logging operations
-type Logger interface {
-	Debug(msg string, fields ...Field)
-	Info(msg string, fields ...Field)
-	Warn(msg string, fields ...Field)
-	Error(msg string, fields ...Field)
-	Fatal(msg string, fields ...Field)
+// Re-export types for backward compatibility
+type (
+	Field  = types.Field
+	Logger = types.Logger
+)
 
-	WithFields(fields ...Field) Logger
-	WithContext(ctx context.Context) Logger
-	Close() error
-}
-
-// Field represents a logging field key-value pair
-type Field struct {
-	Key   string
-	Value interface{}
-}
-
-// NewField creates a new logging field
+// NewField creates a new log field
 func NewField(key string, value interface{}) Field {
-	return Field{
-		Key:   key,
-		Value: value,
-	}
+	return types.NewField(key, value)
 }
