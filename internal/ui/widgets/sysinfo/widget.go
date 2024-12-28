@@ -17,9 +17,7 @@ import (
 
 // Widget represents the system information widget
 type Widget struct {
-	width       int
-	height      int
-	focused     bool
+	components.BaseWidget
 	cpuUsage    float64
 	memoryUsage float64
 	diskUsage   float64
@@ -27,8 +25,7 @@ type Widget struct {
 
 // New creates a new system information widget
 func New() *Widget {
-	w := &Widget{}
-	return w
+	return &Widget{}
 }
 
 // Init implements components.Widget
@@ -50,20 +47,16 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 
 // View implements components.Widget
 func (w *Widget) View() string {
-	style := styles.Base
-	if w.focused {
-		style = styles.Focused
-	}
-
+	width, height := w.GetDimensions()
 	var b strings.Builder
-	b.Grow(w.width * w.height)
+	b.Grow(width * height)
 
 	// Title
 	b.WriteString(styles.Title.Render("System Information"))
 	b.WriteString("\n\n")
 
 	// Calculate bar width (minimum 10 characters)
-	barWidth := w.width - 20
+	barWidth := width - 20
 	if barWidth < 10 {
 		barWidth = 10
 	}
@@ -93,7 +86,7 @@ func (w *Widget) View() string {
 	b.WriteString(fmt.Sprintf("%.1f%% ", w.diskUsage))
 	b.WriteString(diskBar)
 
-	return style.Width(w.width).Height(w.height).Render(b.String())
+	return w.GetStyle().Width(width).Height(height).Render(b.String())
 }
 
 // SetSize implements components.Widget
