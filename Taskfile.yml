@@ -20,6 +20,7 @@ tasks:
 
   lint:
     desc: Run golangci-lint
+    deps: [ wire ]
     cmds:
     - golangci-lint run ./...
 
@@ -31,6 +32,7 @@ tasks:
 
   test:
     desc: Run tests with coverage
+    deps: [ wire ]
     cmds:
     - powershell New-Item -ItemType Directory -Force -Path {{.COVERAGE_DIR}}
     - go test -race -coverprofile={{.COVERAGE_DIR}}/coverage.out -covermode=atomic ./...
@@ -38,6 +40,7 @@ tasks:
 
   build:
     desc: Build the application
+    deps: [ wire ]
     cmds:
     - powershell New-Item -ItemType Directory -Force -Path {{.BUILD_DIR}}
     - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}}.exe ./cmd/dashboard
@@ -69,12 +72,14 @@ tasks:
     desc: Run all main tasks
     cmds:
     - task: fmt
+    - task: wire
     - task: lint
     - task: test
     - task: build
 
   ci:
     desc: Run CI pipeline tasks
+    deps: [ wire ]
     cmds:
     - task: lint
     - task: test
