@@ -17,6 +17,7 @@ tasks:
     - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
     - go install golang.org/x/tools/cmd/goimports@latest
     - go install github.com/google/wire/cmd/wire@latest
+    - go install github.com/goreleaser/goreleaser@latest
 
   lint:
     desc: Run golangci-lint
@@ -107,3 +108,20 @@ tasks:
     deps: [ build ]
     cmds:
     - build/dashboard.exe -debug
+
+  release-dry-run:
+    desc: Test release process locally without publishing
+    deps: [ wire ]
+    cmds:
+    - goreleaser release --snapshot --clean --skip-publish
+
+  release-local:
+    desc: Test the full release workflow using act
+    deps: [ wire ]
+    cmds:
+    - powershell $env:GITHUB_TOKEN = (gh auth token); act -j release --secret GITHUB_TOKEN=$env:GITHUB_TOKEN -e .github/workflows/release-test-event.json
+
+  release-init:
+    desc: Initialize test release event file
+    cmds:
+    - powershell | $json = @{ ref = 'refs/tags/v0.0.0-test' repository = @{ name = 'dashboard' owner = @{ login = 'jonesrussell' } } } $json | ConvertTo-Json | Set-Content .github/workflows/release-test-event.json
