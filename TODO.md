@@ -6,11 +6,11 @@
   - [x] Create main application structure
   - [x] Set up basic UI framework
 - [ ] Implement logging system
-  - [ ] Set up zap logger configuration
-  - [ ] Create logger package with interfaces
-  - [ ] Implement log rotation
+  - [x] Set up zap logger configuration
+  - [x] Create logger package with interfaces
+  - [x] Implement log rotation
   - [ ] Add request ID middleware
-  - [ ] Add logging utilities and helpers
+  - [x] Add logging utilities and helpers
 - [ ] Implement core dashboard features
   - [ ] Add widget container system
   - [ ] Create widget focus management
