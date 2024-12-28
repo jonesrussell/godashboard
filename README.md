@@ -65,7 +65,7 @@ task build
 Run the dashboard:
 ```bash
 # Configure API endpoint (optional)
-export GODO_API_URL="http://localhost:8080"  # Default: http://host.docker.internal:8080
+export GODO_API_URL="http://localhost:8080"  # Default: http://host.docker.internal:8080 (when running in Docker)
 
 # Run dashboard
 task run
