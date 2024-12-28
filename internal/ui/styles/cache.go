@@ -34,12 +34,33 @@ func (c *StyleCache) GetContentStyle(width, height int) lipgloss.Style {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	style := lipgloss.NewStyle().
+	style := ContentStyle.Copy().
+		Width(width).
+		Height(height)
+
+	c.styles[key] = style
+	return style
+}
+
+// GetFocusedStyle returns a cached focused style for the given dimensions
+func (c *StyleCache) GetFocusedStyle(width, height int) lipgloss.Style {
+	key := fmt.Sprintf("focused-%dx%d", width, height)
+
+	c.mu.RLock()
+	if style, ok := c.styles[key]; ok {
+		c.mu.RUnlock()
+		return style
+	}
+	c.mu.RUnlock()
+
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	style := ContentStyle.Copy().
 		Width(width).
 		Height(height).
-		Padding(1).
-		Border(lipgloss.RoundedBorder()).
-		BorderForeground(lipgloss.Color("69"))
+		Border(lipgloss.DoubleBorder()).
+		BorderForeground(Primary)
 
 	c.styles[key] = style
 	return style
