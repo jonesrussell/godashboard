@@ -4,6 +4,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/google/wire"
 	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui"
@@ -19,14 +21,18 @@ func InitializeDashboard() (*ui.Dashboard, error) {
 }
 
 func provideLogger() (logger.Logger, error) {
-	cfg := logger.Config{
-		Level:      "debug",
-		OutputPath: "logs/dashboard.log",
-		MaxSize:    10,
-		MaxBackups: 3,
-		MaxAge:     7,
-		Compress:   true,
-		Debug:      true,
+	cfg := logger.DefaultConfig()
+
+	// Override with environment variables if present
+	if level := os.Getenv("LOG_LEVEL"); level != "" {
+		cfg.Level = level
 	}
+	if path := os.Getenv("LOG_PATH"); path != "" {
+		cfg.OutputPath = path
+	}
+	if debug := os.Getenv("DEBUG"); debug == "true" {
+		cfg.Debug = true
+	}
+
 	return logger.NewZapLogger(cfg)
 }

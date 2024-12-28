@@ -20,6 +20,15 @@ A terminal-based system dashboard built with Go, featuring real-time system moni
   - Style caching
   - Content caching
   - Minimal allocations
+- Structured logging
+  - Zap-based logging
+  - Log rotation
+  - Debug output
+- Comprehensive testing
+  - Unit tests
+  - Integration tests
+  - Performance benchmarks
+  - Test utilities
 
 ## Prerequisites
 
@@ -50,6 +59,16 @@ task build
 Run the dashboard:
 ```bash
 task run
+```
+
+Run with debug output:
+```bash
+task run-debug
+```
+
+Run in external window:
+```bash
+task run-external
 ```
 
 ### Keyboard Controls
@@ -85,6 +104,11 @@ task test
 task lint
 ```
 
+4. Run benchmarks:
+```bash
+task bench
+```
+
 ### Project Structure
 
 ```
@@ -93,6 +117,7 @@ task lint
 │   └── dashboard/     # Main application
 ├── internal/
 │   ├── logger/        # Logging package
+│   ├── testutil/      # Test utilities
 │   └── ui/           # User interface
 │       ├── components/  # UI components
 │       ├── container/   # Widget container
@@ -102,6 +127,38 @@ task lint
 └── test/            # Test utilities
 ```
 
+### Testing
+
+The project uses Go's testing framework with additional utilities:
+
+- `testutil.NewTestLogger` - Creates a logger for tests
+- `testutil.ReadLogFile` - Reads and verifies log output
+- `testutil.NewUITest` - Helps test UI components
+
+Example test:
+```go
+func TestMyFeature(t *testing.T) {
+    log, logPath := testutil.NewTestLogger(t, "test-name")
+    
+    // Use the logger in your test
+    log.Info("Test started")
+    
+    // Verify log output
+    content, err := testutil.ReadLogFile(logPath)
+    require.NoError(t, err)
+    assert.Contains(t, content, "Test started")
+}
+```
+
+### Logging
+
+The dashboard uses structured logging with Zap:
+
+- Debug output goes to `logs/dashboard-debug.log`
+- Log rotation is configured
+- Test logs are automatically cleaned up
+- Log levels: debug, info, warn, error
+
 ## Contributing
 
 1. Fork the repository
@@ -109,6 +166,14 @@ task lint
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
+
+### Code Style
+
+- Follow Go conventions
+- Use provided test utilities
+- Add tests for new features
+- Document exported symbols
+- Run linter before committing
 
 ## License
 

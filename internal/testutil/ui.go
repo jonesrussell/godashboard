@@ -21,8 +21,8 @@ func NewUITest(t *testing.T, model tea.Model) *UITest {
 	return &UITest{
 		t:      t,
 		model:  model,
-		width:  80,
-		height: 24,
+		width:  DefaultTestWindowWidth,
+		height: DefaultTestWindowHeight,
 	}
 }
 

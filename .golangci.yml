@@ -19,16 +19,12 @@ linters:
 linters-settings:
   depguard:
     rules:
-      main:
+      dashboard-ui:
         files:
-        - $all
-        allow:
-        - $gostd # Allow all Go standard library imports
-        - github.com/charmbracelet
-        - github.com/jonesrussell/dashboard
-        - github.com/google/wire
-        - go.uber.org/zap
-        - gopkg.in/natefinch/lumberjack.v2
+        - internal/ui/**/*.go
+        deny:
+        - pkg: fmt
+          desc: "use logger package for output in dashboard UI"
   gocritic:
     enabled-tags:
     - diagnostic

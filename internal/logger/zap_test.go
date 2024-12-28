@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jonesrussell/dashboard/internal/testutil"
+	"github.com/jonesrussell/dashboard/internal/testutil/assertions"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.uber.org/zap"
@@ -136,7 +136,7 @@ func TestLogLevels(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			buf.Reset()
 			tt.logFunc(tt.msg, tt.fields...)
-			testutil.AssertLogEntry(t, &buf, tt.level, tt.msg, tt.wantFields)
+			assertions.AssertLogEntry(t, &buf, tt.level, tt.msg, tt.wantFields)
 		})
 	}
 }
@@ -162,7 +162,7 @@ func TestWithFields(t *testing.T) {
 		"service": "test",
 		"version": "1.0",
 	}
-	testutil.AssertLogEntry(t, &buf, "info", "test message", wantFields)
+	assertions.AssertLogEntry(t, &buf, "info", "test message", wantFields)
 }
 
 func TestWithContext(t *testing.T) {
@@ -182,7 +182,7 @@ func TestWithContext(t *testing.T) {
 	wantFields := map[string]interface{}{
 		"request_id": "123",
 	}
-	testutil.AssertLogEntry(t, &buf, "info", "test message", wantFields)
+	assertions.AssertLogEntry(t, &buf, "info", "test message", wantFields)
 }
 
 func TestLogRotation(t *testing.T) {

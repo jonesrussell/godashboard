@@ -40,6 +40,10 @@
 - Configure log rotation
 - Inject logger through wire
 - Use context for request tracking
+- Testing:
+  - Use testutil.NewTestLogger for tests
+  - Use testutil.ReadLogFile for log verification
+  - Clean up log files after tests
 
 ## UI Components
 - Use Bubbletea for terminal UI
@@ -114,4 +118,15 @@ depguard:
   ignore-files:
     - "*_test.go"
     - "cmd/dashboard/main.go"
-    - "internal/logger/*.go" 
+    - "internal/logger/*.go"
+
+# Test rules
+test:
+  rules:
+    - id: use-testutil-logger
+      pattern: "setupTestLogger"
+      message: "use testutil.NewTestLogger instead of local setupTestLogger functions"
+      severity: error
+      languages: [go]
+      paths:
+        include: ["**/*_test.go"] 

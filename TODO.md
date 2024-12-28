@@ -12,6 +12,7 @@
   - [ ] Add request ID middleware
   - [x] Add logging utilities and helpers
   - [x] Wire integration
+  - [x] Centralize test logging in testutil
 - [x] Implement testing framework
   - [x] Set up test utilities and helpers
   - [x] Add logger package tests
@@ -19,6 +20,8 @@
   - [x] Add integration tests
   - [x] Set up test coverage reporting
   - [x] Add benchmark tests
+  - [x] Centralize test logger setup
+  - [ ] Add test linting rules
 - [ ] Implement core dashboard features
   - [x] Add widget container system
     - [x] Grid layout management
@@ -102,6 +105,10 @@
 - [ ] Create user guide
 - [ ] Add widget development guide
 - [ ] Document configuration options
+- [ ] Document test utilities
+  - [ ] Logger setup
+  - [ ] UI testing helpers
+  - [ ] Benchmark guidelines
 
 ## Testing
 - [x] Unit tests for core components
@@ -113,6 +120,14 @@
   - [x] Resize handling
   - [x] Help toggle
 - [ ] Cross-platform testing
+- [x] Centralize test logging
+  - [x] Add testutil.NewTestLogger
+  - [x] Add log file cleanup
+  - [x] Add log verification helpers
+- [ ] Add test linting rules
+  - [x] Enforce testutil.NewTestLogger usage
+  - [ ] Add test naming conventions
+  - [ ] Add test structure rules
 
 ## Optimization
 - [x] Improve rendering performance

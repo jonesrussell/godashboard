@@ -34,11 +34,11 @@ func NewTestLogger(tb testing.TB, name string) (logger.Logger, string) {
 	}
 
 	cfg := logger.Config{
-		Level:      "debug",
+		Level:      DefaultTestLogLevel,
 		OutputPath: logPath,
-		MaxSize:    1,
-		MaxBackups: 0,
-		MaxAge:     1,
+		MaxSize:    DefaultTestLogMaxSize,
+		MaxBackups: DefaultTestLogMaxBackups,
+		MaxAge:     DefaultTestLogMaxAge,
 		Compress:   false,
 		Debug:      true,
 	}

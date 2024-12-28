@@ -24,7 +24,6 @@ func (l *Logger) Printf(format string, args ...interface{}) {
 	if l.out != nil {
 		// Use fmt.Fprintf internally, but expose a cleaner API
 		// This is okay because it's isolated in the debug package
-		// and not used directly in the dashboard
 		fmt.Fprintf(l.out, format+"\n", args...)
 	}
 }
