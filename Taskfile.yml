@@ -113,7 +113,7 @@ tasks:
     desc: Test release process locally without publishing
     deps: [ wire ]
     cmds:
-    - goreleaser release --snapshot --clean --skip-publish
+    - goreleaser release --snapshot --clean --skip=publish,validate
 
   release-local:
     desc: Test the full release workflow using act

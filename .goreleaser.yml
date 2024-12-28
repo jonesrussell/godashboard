@@ -22,7 +22,7 @@ builds:
 - id: linux
   main: ./cmd/dashboard
   env:
-  - CGO_ENABLED=1
+  - CGO_ENABLED=0
   goos:
   - linux
   goarch:
@@ -76,3 +76,7 @@ release:
     **Full Changelog**: https://github.com/jonesrussell/dashboard/compare/{{ .PreviousTag }}...{{ .Tag }}
 
   discussion_category_name: Releases
+
+# Skip specific steps during development/testing
+snapshot:
+  name_template: "{{ .Version }}-SNAPSHOT-{{.ShortCommit}}"
