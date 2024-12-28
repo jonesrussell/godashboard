@@ -8,78 +8,85 @@ vars:
 tasks:
   default:
     cmds:
-      - task --list-all
+    - task --list-all
     silent: true
 
   install-tools:
     desc: Install development tools
     cmds:
-      - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-      - go install golang.org/x/tools/cmd/goimports@latest
-      - go install github.com/google/wire/cmd/wire@latest
+    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+    - go install golang.org/x/tools/cmd/goimports@latest
+    - go install github.com/google/wire/cmd/wire@latest
 
   lint:
     desc: Run golangci-lint
     cmds:
-      - golangci-lint run ./...
+    - golangci-lint run ./...
 
   fmt:
     desc: Format code
     cmds:
-      - gofmt -s -w .
-      - goimports -w .
+    - gofmt -s -w .
+    - goimports -w .
 
   test:
     desc: Run tests with coverage
     cmds:
-      - mkdir -p {{.COVERAGE_DIR}}
-      - go test -race -coverprofile={{.COVERAGE_DIR}}/coverage.out -covermode=atomic ./...
-      - go tool cover -html={{.COVERAGE_DIR}}/coverage.out -o {{.COVERAGE_DIR}}/coverage.html
-    
+    - mkdir -p {{.COVERAGE_DIR}}
+    - go test -race -coverprofile={{.COVERAGE_DIR}}/coverage.out -covermode=atomic ./...
+    - go tool cover -html={{.COVERAGE_DIR}}/coverage.out -o {{.COVERAGE_DIR}}/coverage.html
+
   build:
     desc: Build the application
     cmds:
-      - mkdir -p {{.BUILD_DIR}}
-      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/dashboard
+    - mkdir -p {{.BUILD_DIR}}
+    - go build -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe .\cmd\dashboard
 
   run:
     desc: Run the application
+    deps: [ build ]
     cmds:
-      - go run ./cmd/dashboard
+    - '{{.BUILD_DIR}}\{{.BINARY_NAME}}.exe'
+
+  run-external:
+    desc: Run the application in a new window
+    deps: [ build ]
+    cmds:
+    - '{{.BUILD_DIR}}\{{.BINARY_NAME}}.exe -external'
 
   clean:
     desc: Clean build artifacts
     cmds:
-      - rm -rf {{.BUILD_DIR}}
-      - rm -rf {{.COVERAGE_DIR}}
+    - rm -rf {{.BUILD_DIR}}
+    - rm -rf {{.COVERAGE_DIR}}
 
   wire:
     desc: Generate wire dependency injection code
     cmds:
-      - wire ./...
+    - wire ./...
 
   all:
     desc: Run all main tasks
     cmds:
-      - task: fmt
-      - task: lint
-      - task: test
-      - task: build
-    
+    - task: fmt
+    - task: lint
+    - task: test
+    - task: build
+
   ci:
     desc: Run CI pipeline tasks
     cmds:
-      - task: lint
-      - task: test
-      - task: build
+    - task: lint
+    - task: test
+    - task: build
 
   watch:
     desc: Watch for changes and rebuild
     cmds:
-      - watchexec -r -e go "task build && {{.BUILD_DIR}}/{{.BINARY_NAME}}"
+    - watchexec -r -e go "task build && {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe"
 
   deps:
     desc: Download and tidy dependencies
     cmds:
-      - go mod download
-      - go mod tidy 
+    - go mod download
+    - go mod tidy
