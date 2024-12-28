@@ -2,11 +2,13 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
 )
 
@@ -58,15 +60,41 @@ type Dashboard struct {
 	width    int
 	height   int
 	showHelp bool
+
+	// Cached styles
+	headerStyle lipgloss.Style
+	footerStyle lipgloss.Style
+	styleCache  *styles.StyleCache
+
+	// Content cache
+	headerContent string
+	footerContent string
+	contentCache  map[string]string
+	needsRefresh  bool
 }
 
 // NewDashboard creates a new dashboard instance
 func NewDashboard() *Dashboard {
-	return &Dashboard{
+	d := &Dashboard{
 		keys:     DefaultKeyMap,
 		help:     help.New(),
 		showHelp: false,
+
+		// Initialize cached styles
+		headerStyle: styles.HeaderStyle,
+		footerStyle: styles.FooterStyle,
+		styleCache:  styles.NewStyleCache(),
+
+		// Initialize content cache
+		contentCache: make(map[string]string),
+		needsRefresh: true,
 	}
+
+	// Pre-render static content
+	d.headerContent = d.headerStyle.Render("Dashboard")
+	d.footerContent = d.footerStyle.Render("Press ? for help")
+
+	return d
 }
 
 // Init implements tea.Model
@@ -83,12 +111,14 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return d, tea.Quit
 		case key.Matches(msg, d.keys.Help):
 			d.showHelp = !d.showHelp
+			d.needsRefresh = true
 			return d, nil
 		}
 
 	case tea.WindowSizeMsg:
 		d.width = msg.Width
 		d.height = msg.Height
+		d.needsRefresh = true
 	}
 
 	return d, nil
@@ -96,38 +126,58 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 // View implements tea.Model
 func (d *Dashboard) View() string {
-	// Create the main container
-	doc := strings.Builder{}
-
-	// Add header
-	doc.WriteString(d.renderHeader())
-	doc.WriteString("\n")
-
-	// Add main content area
-	doc.WriteString(d.renderContent())
-	doc.WriteString("\n")
-
-	// Add footer with help
-	if d.showHelp {
-		doc.WriteString(d.help.View(d.keys))
-	} else {
-		doc.WriteString(d.renderFooter())
+	// Return cached content if available and no refresh needed
+	if !d.needsRefresh {
+		if d.showHelp {
+			return d.getHelpView()
+		}
+		return d.getNormalView()
 	}
 
-	return doc.String()
+	// Update cache and return new content
+	d.needsRefresh = false
+	if d.showHelp {
+		return d.getHelpView()
+	}
+	return d.getNormalView()
 }
 
-func (d *Dashboard) renderHeader() string {
-	return styles.HeaderStyle.Render("Dashboard")
+// getHelpView returns the help view (not cached since help model handles its own rendering)
+func (d *Dashboard) getHelpView() string {
+	var b strings.Builder
+	b.Grow(d.width * d.height)
+
+	b.WriteString(d.headerContent)
+	b.WriteByte('\n')
+
+	contentStyle := d.styleCache.GetContentStyle(d.width-4, d.height-6)
+	b.WriteString(contentStyle.Render("Welcome to the dashboard!"))
+	b.WriteByte('\n')
+
+	b.WriteString(d.help.View(d.keys))
+	return b.String()
 }
 
-func (d *Dashboard) renderContent() string {
-	return styles.ContentStyle.
-		Width(d.width - 4).
-		Height(d.height - 6).
-		Render("Welcome to the dashboard!")
-}
+// getNormalView returns the normal view (with caching)
+func (d *Dashboard) getNormalView() string {
+	key := fmt.Sprintf("%dx%d", d.width, d.height)
+	if content, ok := d.contentCache[key]; ok {
+		return content
+	}
 
-func (d *Dashboard) renderFooter() string {
-	return styles.FooterStyle.Render("Press ? for help")
+	var b strings.Builder
+	b.Grow(d.width * d.height)
+
+	b.WriteString(d.headerContent)
+	b.WriteByte('\n')
+
+	contentStyle := d.styleCache.GetContentStyle(d.width-4, d.height-6)
+	b.WriteString(contentStyle.Render("Welcome to the dashboard!"))
+	b.WriteByte('\n')
+
+	b.WriteString(d.footerContent)
+
+	content := b.String()
+	d.contentCache[key] = content
+	return content
 }

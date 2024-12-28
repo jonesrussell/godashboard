@@ -34,3 +34,34 @@ var ContentStyle = BaseStyle.Copy().
 var FooterStyle = BaseStyle.Copy().
 	BorderStyle(lipgloss.HiddenBorder()).
 	Align(lipgloss.Center)
+
+// StyleCache provides cached styles for different dimensions
+type StyleCache struct {
+	contentStyles map[string]lipgloss.Style
+}
+
+// NewStyleCache creates a new style cache
+func NewStyleCache() *StyleCache {
+	return &StyleCache{
+		contentStyles: make(map[string]lipgloss.Style),
+	}
+}
+
+// GetContentStyle returns a cached content style for the given dimensions
+func (c *StyleCache) GetContentStyle(width, height int) lipgloss.Style {
+	key := styleKey(width, height)
+	if style, ok := c.contentStyles[key]; ok {
+		return style
+	}
+
+	style := ContentStyle.Copy().
+		Width(width).
+		Height(height)
+	c.contentStyles[key] = style
+	return style
+}
+
+// styleKey generates a cache key for dimensions
+func styleKey(width, height int) string {
+	return string(rune(width)) + "x" + string(rune(height))
+}

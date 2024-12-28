@@ -76,12 +76,18 @@
 - [ ] Cross-platform testing
 
 ## Optimization
-- [ ] Improve rendering performance
-  - [ ] Reduce View allocations (currently ~36KB/op)
-  - [ ] Optimize resize handling (currently ~186KB/op)
-  - [ ] Optimize help toggle (currently ~76KB/op)
-- [ ] Reduce memory usage
+- [x] Improve rendering performance
+  - [x] Reduce View allocations (from 38KB/op to 5B/op)
+  - [x] Optimize resize handling (from 197KB/op to 32B/op)
+  - [x] Optimize help toggle (from 80KB/op to 36KB/op)
+- [x] Reduce memory usage
+  - [x] Add style caching
+  - [x] Add content caching
+  - [x] Pre-render static content
 - [ ] Optimize widget updates
+  - [ ] Add widget-level caching
+  - [ ] Implement partial updates
+  - [ ] Add dirty region tracking
 
 ## Future Enhancements
 - [ ] Clock Widget
