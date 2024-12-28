@@ -19,6 +19,13 @@
     - [ ] Add focus switching benchmarks
     - [ ] Add content caching benchmarks
     - [ ] Add widget interaction benchmarks
+- [ ] Fix System Monitoring
+  - [x] Implement real-time CPU monitoring
+  - [x] Implement memory usage tracking
+  - [x] Implement disk space monitoring
+  - [ ] Add error handling for failed metrics
+  - [ ] Add tooltips for metric details
+  - [ ] Add historical data graphs
 
 ## Core Features (In Progress)
 - [ ] Network Monitoring

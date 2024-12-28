@@ -30,7 +30,11 @@ func New() *Widget {
 
 // Init implements components.Widget
 func (w *Widget) Init() tea.Cmd {
-	return w.tick()
+	// Start with immediate update and begin ticking
+	return tea.Batch(
+		w.updateSystemInfo,
+		w.tick(),
+	)
 }
 
 // Update implements components.Widget
@@ -41,6 +45,8 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 		w.memoryUsage = msg.memory
 		w.diskUsage = msg.disk
 		return w, w.tick()
+	case updateSystemInfoMsg:
+		return w, w.updateSystemInfo
 	}
 	return w, nil
 }
@@ -137,7 +143,7 @@ type systemInfoMsg struct {
 
 // tick returns a command that waits for the update interval
 func (w *Widget) tick() tea.Cmd {
-	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
+	return tea.Tick(2*time.Second, func(t time.Time) tea.Msg {
 		return updateSystemInfoMsg{}
 	})
 }
@@ -145,7 +151,7 @@ func (w *Widget) tick() tea.Cmd {
 // updateSystemInfoMsg triggers a system info update
 type updateSystemInfoMsg struct{}
 
-// updateSystemInfo returns a command that updates system information
+// updateSystemInfo updates system information
 func (w *Widget) updateSystemInfo() tea.Msg {
 	// Get CPU usage
 	cpuPercent, err := cpu.Percent(time.Second, false)
