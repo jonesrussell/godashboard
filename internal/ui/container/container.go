@@ -1,95 +1,67 @@
-// Package container provides widget container and layout management
+// Package container provides a flexible container for organizing UI widgets
 package container
 
 import (
-	"strings"
-
+	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
-	"github.com/jonesrussell/dashboard/internal/ui/styles"
 )
 
-// GridConfig defines the configuration for a grid cell
-type GridConfig struct {
-	Row      int
-	Col      int
-	RowSpan  int
-	ColSpan  int
-	MinWidth int
-}
+const (
+	// Minimum dimensions
+	minCellWidth  = 20
+	minCellHeight = 10
+	minWidth      = 40
+	minHeight     = 20
+)
 
-// WidgetEntry represents a widget with its grid configuration
-type WidgetEntry struct {
-	Widget  components.Widget
-	Config  GridConfig
-	Focused bool
-}
-
-// Container manages multiple widgets in a grid layout
+// Container manages the layout and interaction of multiple widgets
 type Container struct {
-	// Layout properties
-	width  int
-	height int
-	rows   int
-	cols   int
-	debug  bool
-	logger logger.Logger
-
-	// Widget management
-	widgets    []WidgetEntry
-	focusIndex int
-	styleCache *styles.StyleCache
-
-	// Content cache
-	contentCache map[string]string
-	needsRefresh bool
+	width    int
+	height   int
+	focused  bool
+	entries  []WidgetEntry
+	selected int
 }
 
-// New creates a new widget container
-func New(rows, cols int, log logger.Logger) *Container {
+// WidgetEntry represents a widget and its layout properties
+type WidgetEntry struct {
+	Widget    components.Widget
+	Row       int
+	Col       int
+	RowSpan   int
+	ColSpan   int
+	MinWidth  int
+	MinHeight int
+}
+
+// New creates a new container instance
+func New() *Container {
 	return &Container{
-		rows:         rows,
-		cols:         cols,
-		widgets:      make([]WidgetEntry, 0),
-		focusIndex:   -1,
-		styleCache:   styles.NewStyleCache(),
-		contentCache: make(map[string]string),
-		needsRefresh: true,
-		logger:       log,
+		entries:  make([]WidgetEntry, 0),
+		selected: -1,
 	}
 }
 
-// AddWidget adds a widget to the container with default configuration
-func (c *Container) AddWidget(w components.Widget) {
-	c.AddWidgetWithConfig(w, GridConfig{
-		Row:      len(c.widgets) / c.cols,
-		Col:      len(c.widgets) % c.cols,
-		RowSpan:  1,
-		ColSpan:  1,
-		MinWidth: 20,
-	})
-}
-
-// AddWidgetWithConfig adds a widget with specific grid configuration
-func (c *Container) AddWidgetWithConfig(w components.Widget, config GridConfig) {
+// AddWidget adds a widget to the container
+func (c *Container) AddWidget(widget components.Widget, row, col, rowSpan, colSpan int) {
 	entry := WidgetEntry{
-		Widget:  w,
-		Config:  config,
-		Focused: len(c.widgets) == 0,
+		Widget:    widget,
+		Row:       row,
+		Col:       col,
+		RowSpan:   rowSpan,
+		ColSpan:   colSpan,
+		MinWidth:  minCellWidth,
+		MinHeight: minCellHeight,
 	}
-	c.widgets = append(c.widgets, entry)
-	if c.focusIndex == -1 {
-		c.focusIndex = 0
-	}
-	c.needsRefresh = true
+	c.entries = append(c.entries, entry)
 }
 
 // Init implements tea.Model
 func (c *Container) Init() tea.Cmd {
 	var cmds []tea.Cmd
-	for _, entry := range c.widgets {
+	for _, entry := range c.entries {
 		if cmd := entry.Widget.Init(); cmd != nil {
 			cmds = append(cmds, cmd)
 		}
@@ -97,255 +69,148 @@ func (c *Container) Init() tea.Cmd {
 	return tea.Batch(cmds...)
 }
 
-// Update implements tea.Model
-func (c *Container) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+// Update implements components.Widget
+func (c *Container) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		// Handle tab navigation between widgets
-		if msg.Type == tea.KeyTab {
-			c.focusIndex = (c.focusIndex + 1) % len(c.widgets)
-			for i := range c.widgets {
-				c.widgets[i].Focused = i == c.focusIndex
-			}
-			c.needsRefresh = true
+		if key.Matches(msg, key.NewBinding(key.WithKeys("tab"))) {
+			c.focusNext()
 			return c, nil
 		}
-
-		// Forward message to focused widget
-		if c.focusIndex >= 0 && c.focusIndex < len(c.widgets) {
-			entry := &c.widgets[c.focusIndex]
-			newWidget, cmd := entry.Widget.Update(msg)
-			if w, ok := newWidget.(components.Widget); ok {
-				entry.Widget = w
-				c.needsRefresh = true
-				return c, cmd
-			}
-		}
-
 	case tea.WindowSizeMsg:
 		c.width = msg.Width
 		c.height = msg.Height
-		c.needsRefresh = true
+		c.updateWidgetSizes()
+	}
 
-		// Calculate grid dimensions
-		c.updateGridSizes()
-
-		// Forward size message to widgets
-		for i := range c.widgets {
-			entry := &c.widgets[i]
-			if newWidget, cmd := entry.Widget.Update(msg); cmd != nil {
-				if w, ok := newWidget.(components.Widget); ok {
-					entry.Widget = w
-				}
-			}
+	// Update focused widget
+	if c.selected >= 0 && c.selected < len(c.entries) {
+		if widget, cmd := c.entries[c.selected].Widget.Update(msg); cmd != nil {
+			cmds = append(cmds, cmd)
+			c.entries[c.selected].Widget = widget.(components.Widget)
 		}
 	}
 
-	return c, nil
+	return c, tea.Batch(cmds...)
 }
 
 // View implements tea.Model
 func (c *Container) View() string {
-	if len(c.widgets) == 0 {
-		return "No widgets"
+	if !c.hasValidDimensions() {
+		return "Window too small"
 	}
 
-	if c.debug {
-		c.logger.Debug("=== Container Debug ===")
-	}
-
-	// Calculate grid dimensions with spacing
-	cellWidth := (c.width - 2 - (c.cols-1)*1) / c.cols   // Reduced spacing
-	cellHeight := (c.height - 2 - (c.rows-1)*1) / c.rows // Reduced spacing
-
-	if c.debug {
-		c.logger.Debug("Grid dimensions",
-			logger.NewField("cols", c.cols),
-			logger.NewField("rows", c.rows))
-		c.logger.Debug("Cell dimensions",
-			logger.NewField("width", cellWidth),
-			logger.NewField("height", cellHeight))
-	}
-
-	// Build grid view
-	var grid [][]string
-	for row := 0; row < c.rows; row++ {
-		var rowContent []string
-		for col := 0; col < c.cols; col++ {
-			// Find widget for this cell
-			var content string
-			for _, entry := range c.widgets {
-				if c.isWidgetInCell(entry, row, col) {
-					width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*1
-					height := cellHeight*entry.Config.RowSpan + (entry.Config.RowSpan-1)*1
-
-					// Ensure minimum width
-					if width < entry.Config.MinWidth {
-						width = entry.Config.MinWidth
-					}
-
-					if c.debug {
-						c.logger.Debug("Widget dimensions",
-							logger.NewField("row", row),
-							logger.NewField("col", col),
-							logger.NewField("width", width),
-							logger.NewField("height", height),
-							logger.NewField("focused", entry.Focused))
-					}
-
-					var style lipgloss.Style
-					if entry.Focused {
-						style = c.styleCache.GetFocusedStyle(width, height)
-					} else {
-						style = c.styleCache.GetContentStyle(width, height)
-					}
-
-					content = style.Render(entry.Widget.View())
-					break
-				}
-			}
-			if content == "" {
-				if c.debug {
-					c.logger.Debug("Empty cell",
-						logger.NewField("row", row),
-						logger.NewField("col", col))
-				}
-				style := c.styleCache.GetContentStyle(cellWidth, cellHeight)
-				content = style.Render("")
-			}
-			rowContent = append(rowContent, content)
-
-			// Add spacing between columns
-			if col < c.cols-1 {
-				rowContent = append(rowContent, " ") // Single space between columns
+	rows := make([]string, 0)
+	for row := 0; row < c.getRowCount(); row++ {
+		rowContent := make([]string, 0)
+		for col := 0; col < c.getColCount(); col++ {
+			widget := c.getWidgetAt(row, col)
+			if widget != nil {
+				rowContent = append(rowContent, widget.View())
+			} else {
+				rowContent = append(rowContent, "")
 			}
 		}
-		grid = append(grid, rowContent)
+		rows = append(rows, lipgloss.JoinHorizontal(lipgloss.Top, rowContent...))
+	}
 
-		// Add spacing between rows
-		if row < c.rows-1 {
-			grid = append(grid, []string{""}) // Single line between rows
+	return lipgloss.JoinVertical(lipgloss.Left, rows...)
+}
+
+// SetSize implements components.Widget
+func (c *Container) SetSize(width, height int) {
+	c.width = width
+	c.height = height
+	c.updateWidgetSizes()
+}
+
+// GetDimensions implements components.Widget
+func (c *Container) GetDimensions() (width, height int) {
+	return c.width, c.height
+}
+
+// Focus implements components.Widget
+func (c *Container) Focus() {
+	c.focused = true
+	if c.selected == -1 && len(c.entries) > 0 {
+		c.selected = 0
+		c.entries[0].Widget.Focus()
+	}
+}
+
+// Blur implements components.Widget
+func (c *Container) Blur() {
+	c.focused = false
+	if c.selected >= 0 && c.selected < len(c.entries) {
+		c.entries[c.selected].Widget.Blur()
+	}
+}
+
+// IsFocused implements components.Widget
+func (c *Container) IsFocused() bool {
+	return c.focused
+}
+
+func (c *Container) hasValidDimensions() bool {
+	return c.width >= minWidth && c.height >= minHeight
+}
+
+func (c *Container) focusNext() {
+	if len(c.entries) == 0 {
+		return
+	}
+
+	if c.selected >= 0 {
+		c.entries[c.selected].Widget.Blur()
+	}
+
+	c.selected = (c.selected + 1) % len(c.entries)
+	c.entries[c.selected].Widget.Focus()
+}
+
+func (c *Container) updateWidgetSizes() {
+	cellWidth := c.width / c.getColCount()
+	cellHeight := c.height / c.getRowCount()
+
+	if cellWidth < minCellWidth || cellHeight < minCellHeight {
+		return
+	}
+
+	for i := range c.entries {
+		width := cellWidth * c.entries[i].ColSpan
+		height := cellHeight * c.entries[i].RowSpan
+		c.entries[i].Widget.SetSize(width, height)
+	}
+}
+
+func (c *Container) getWidgetAt(row, col int) components.Widget {
+	for _, entry := range c.entries {
+		if entry.Row <= row && row < entry.Row+entry.RowSpan &&
+			entry.Col <= col && col < entry.Col+entry.ColSpan {
+			return entry.Widget
 		}
-	}
-
-	if c.debug {
-		c.logger.Debug("=== End Container Debug ===")
-	}
-
-	// Render grid
-	var b strings.Builder
-	b.Grow(c.width * c.height)
-
-	for _, row := range grid {
-		for _, cell := range row {
-			b.WriteString(cell)
-		}
-		b.WriteByte('\n')
-	}
-
-	return b.String()
-}
-
-// updateGridSizes calculates and updates widget sizes based on grid configuration
-func (c *Container) updateGridSizes() {
-	// Ensure minimum container dimensions
-	if c.width < 40 {
-		c.width = 40
-	}
-	if c.height < 20 {
-		c.height = 20
-	}
-
-	// Calculate cell dimensions with spacing
-	cellWidth := (c.width - 4 - (c.cols-1)*2) / c.cols
-	if cellWidth < 20 {
-		cellWidth = 20
-	}
-
-	cellHeight := (c.height - 4 - (c.rows-1)*1) / c.rows
-	if cellHeight < 10 {
-		cellHeight = 10
-	}
-
-	for i := range c.widgets {
-		entry := &c.widgets[i]
-		width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*2
-		height := cellHeight*entry.Config.RowSpan + (entry.Config.RowSpan-1)*1
-
-		// Ensure minimum width
-		if width < entry.Config.MinWidth {
-			width = entry.Config.MinWidth
-		}
-
-		entry.Widget.SetSize(width, height)
-	}
-}
-
-// getWidgetWidth returns the width for a widget based on its configuration
-func (c *Container) getWidgetWidth(entry WidgetEntry) int {
-	cellWidth := (c.width - 4 - (c.cols-1)*2) / c.cols
-	if cellWidth < 20 {
-		cellWidth = 20
-	}
-
-	width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*2
-	if width < entry.Config.MinWidth {
-		width = entry.Config.MinWidth
-	}
-	return width
-}
-
-// getWidgetHeight returns the height for a widget based on its configuration
-func (c *Container) getWidgetHeight(entry WidgetEntry) int {
-	cellHeight := (c.height - 4 - (c.rows-1)*1) / c.rows
-	if cellHeight < 10 {
-		cellHeight = 10
-	}
-
-	return cellHeight*entry.Config.RowSpan + (entry.Config.RowSpan-1)*1
-}
-
-// isWidgetInCell checks if a widget occupies the given grid cell
-func (c *Container) isWidgetInCell(entry WidgetEntry, row, col int) bool {
-	return row >= entry.Config.Row &&
-		row < entry.Config.Row+entry.Config.RowSpan &&
-		col >= entry.Config.Col &&
-		col < entry.Config.Col+entry.Config.ColSpan
-}
-
-// FocusedWidget returns the currently focused widget
-func (c *Container) FocusedWidget() components.Widget {
-	if c.focusIndex >= 0 && c.focusIndex < len(c.widgets) {
-		return c.widgets[c.focusIndex].Widget
 	}
 	return nil
 }
 
-// HandleFocusKey handles focus-related key events
-func (c *Container) HandleFocusKey(msg tea.KeyMsg) bool {
-	switch msg.Type {
-	case tea.KeyTab:
-		c.focusIndex = (c.focusIndex + 1) % len(c.widgets)
-		for i := range c.widgets {
-			c.widgets[i].Focused = i == c.focusIndex
+func (c *Container) getRowCount() int {
+	maxRow := 0
+	for _, entry := range c.entries {
+		if entry.Row+entry.RowSpan > maxRow {
+			maxRow = entry.Row + entry.RowSpan
 		}
-		c.needsRefresh = true
-		return true
-	case tea.KeyShiftTab:
-		c.focusIndex--
-		if c.focusIndex < 0 {
-			c.focusIndex = len(c.widgets) - 1
-		}
-		for i := range c.widgets {
-			c.widgets[i].Focused = i == c.focusIndex
-		}
-		c.needsRefresh = true
-		return true
 	}
-	return false
+	return maxRow
 }
 
-// EnableDebug enables debug output
-func (c *Container) EnableDebug() {
-	c.debug = true
+func (c *Container) getColCount() int {
+	maxCol := 0
+	for _, entry := range c.entries {
+		if entry.Col+entry.ColSpan > maxCol {
+			maxCol = entry.Col + entry.ColSpan
+		}
+	}
+	return maxCol
 }

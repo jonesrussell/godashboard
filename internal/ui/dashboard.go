@@ -15,6 +15,15 @@ import (
 	"github.com/jonesrussell/dashboard/internal/ui/widgets/tasks"
 )
 
+const (
+	// Layout constants
+	minContentWidth  = 40
+	minContentHeight = 20
+	contentPadding   = 2
+	headerHeight     = 1
+	footerHeight     = 1
+)
+
 // Dashboard messages
 type dashboardMsg int
 
@@ -121,15 +130,6 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		d.width = msg.Width
 		d.height = msg.Height
-
-		// Calculate widget sizes
-		contentWidth := d.width - 4
-		contentHeight := d.height - 6
-		halfWidth := contentWidth / 2
-
-		// Update widget sizes
-		d.sysInfo.SetSize(halfWidth-1, contentHeight)
-		d.tasks.SetSize(halfWidth-1, contentHeight)
 	}
 
 	// Update widgets
@@ -157,15 +157,21 @@ func (d *Dashboard) View() string {
 	b.WriteString(styles.Header.Render(header))
 	b.WriteRune('\n')
 
-	// Main content area
-	contentWidth := d.width - 4
-	contentHeight := d.height - 6
+	// Main content area with proper padding and minimum sizes
+	contentWidth := max(d.width-2*contentPadding, minContentWidth)
+	contentHeight := max(d.height-(headerHeight+footerHeight+2*contentPadding), minContentHeight)
 
 	if d.showHelp {
 		helpContent := "Help\n\n" + d.help.View(d.keys)
 		b.WriteString(styles.WithSize(styles.Base, contentWidth, contentHeight).Render(helpContent))
 	} else {
-		// Layout widgets side by side
+		// Layout widgets side by side with equal width distribution
+		widgetWidth := (contentWidth - contentPadding) / 2
+
+		// Set widget sizes before rendering
+		d.sysInfo.SetSize(widgetWidth, contentHeight)
+		d.tasks.SetSize(widgetWidth, contentHeight)
+
 		content := lipgloss.JoinHorizontal(
 			lipgloss.Top,
 			d.sysInfo.View(),
