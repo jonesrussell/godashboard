@@ -1,0 +1,51 @@
+# Binary output directory
+/build/
+
+# Go specific
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+
+# IDE specific
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Debug files
+debug/
+
+# Log files
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+
+# Test coverage
+coverage.txt
+coverage.html
+
+# Wire generated files
+*wire_gen.go
+
+# Temporary files
+tmp/
+temp/
+
+# Dependencies
+vendor/
+
+# Binary file
+dashboard
+dashboard.exe
+
+# Project specific
+config.local.yaml 

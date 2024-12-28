@@ -32,33 +32,33 @@ tasks:
   test:
     desc: Run tests with coverage
     cmds:
-    - mkdir -p {{.COVERAGE_DIR}}
+    - powershell New-Item -ItemType Directory -Force -Path {{.COVERAGE_DIR}}
     - go test -race -coverprofile={{.COVERAGE_DIR}}/coverage.out -covermode=atomic ./...
     - go tool cover -html={{.COVERAGE_DIR}}/coverage.out -o {{.COVERAGE_DIR}}/coverage.html
 
   build:
     desc: Build the application
     cmds:
-    - mkdir -p {{.BUILD_DIR}}
-    - go build -o {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe .\cmd\dashboard
+    - powershell New-Item -ItemType Directory -Force -Path {{.BUILD_DIR}}
+    - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}}.exe ./cmd/dashboard
 
   run:
     desc: Run the application
     deps: [ build ]
     cmds:
-    - '{{.BUILD_DIR}}\{{.BINARY_NAME}}.exe'
+    - '{{.BUILD_DIR}}/{{.BINARY_NAME}}.exe'
 
   run-external:
     desc: Run the application in a new window
     deps: [ build ]
     cmds:
-    - '{{.BUILD_DIR}}\{{.BINARY_NAME}}.exe -external'
+    - '{{.BUILD_DIR}}/{{.BINARY_NAME}}.exe -external'
 
   clean:
     desc: Clean build artifacts
     cmds:
-    - rm -rf {{.BUILD_DIR}}
-    - rm -rf {{.COVERAGE_DIR}}
+    - powershell Remove-Item -Path {{.BUILD_DIR}} -Recurse -Force -ErrorAction Ignore
+    - powershell Remove-Item -Path {{.COVERAGE_DIR}} -Recurse -Force -ErrorAction Ignore
 
   wire:
     desc: Generate wire dependency injection code
