@@ -34,7 +34,7 @@ coverage.txt
 coverage.html
 
 # Wire generated files
-*wire_gen.go
+**/*wire_gen.go
 
 # Temporary files
 tmp/
