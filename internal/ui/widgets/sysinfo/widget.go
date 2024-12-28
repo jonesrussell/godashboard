@@ -64,6 +64,8 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 
 // View implements components.Widget
 func (w *Widget) View() string {
+	fmt.Printf("SysInfo Widget dimensions: width=%d, height=%d\n", w.width, w.height)
+
 	var b strings.Builder
 	b.Grow(w.width * w.height)
 
@@ -80,6 +82,10 @@ func (w *Widget) View() string {
 	if barWidth < 10 {
 		barWidth = 10
 	}
+
+	fmt.Printf("SysInfo progress bars width: %d\n", barWidth)
+	fmt.Printf("SysInfo values: CPU=%.1f%%, Memory=%.1f%%, Disk=%.1f%%\n",
+		w.cpuUsage, w.memoryUsage, w.diskUsage)
 
 	// Format system info with bars
 	cpuBar := createUsageBar(w.cpuUsage, barWidth)
@@ -106,7 +112,9 @@ func (w *Widget) View() string {
 	b.WriteString(fmt.Sprintf("%.1f%% ", w.diskUsage))
 	b.WriteString(diskBar)
 
-	return w.style.Width(w.width).Height(w.height).Render(b.String())
+	rendered := w.style.Width(w.width).Height(w.height).Render(b.String())
+	fmt.Printf("SysInfo rendered content length: %d\n", len(rendered))
+	return rendered
 }
 
 // SetSize implements components.Widget

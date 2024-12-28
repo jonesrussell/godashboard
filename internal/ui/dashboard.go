@@ -2,6 +2,7 @@
 package ui
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
@@ -169,6 +170,9 @@ func (d *Dashboard) View() string {
 	var b strings.Builder
 	b.Grow(d.width * d.height)
 
+	// Log dimensions
+	fmt.Printf("Dashboard dimensions: width=%d, height=%d\n", d.width, d.height)
+
 	// Add header
 	b.WriteString(d.headerContent)
 	b.WriteByte('\n')
@@ -178,6 +182,7 @@ func (d *Dashboard) View() string {
 		contentStyle := d.styleCache.GetContentStyle(d.width-4, d.height-6)
 		b.WriteString(contentStyle.Render("Welcome to the dashboard!"))
 	} else {
+		fmt.Printf("Container dimensions: width=%d, height=%d\n", d.width-4, d.height-6)
 		b.WriteString(d.container.View())
 	}
 	b.WriteByte('\n')

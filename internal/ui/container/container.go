@@ -2,6 +2,7 @@
 package container
 
 import (
+	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -150,6 +151,9 @@ func (c *Container) View() string {
 	cellWidth := (c.width - 4 - (c.cols-1)*2) / c.cols   // Account for spacing between cells
 	cellHeight := (c.height - 4 - (c.rows-1)*1) / c.rows // Account for spacing between rows
 
+	fmt.Printf("Grid dimensions: cols=%d, rows=%d\n", c.cols, c.rows)
+	fmt.Printf("Cell dimensions: width=%d, height=%d\n", cellWidth, cellHeight)
+
 	// Build grid view
 	var grid [][]string
 	for row := 0; row < c.rows; row++ {
@@ -167,6 +171,9 @@ func (c *Container) View() string {
 						width = entry.Config.MinWidth
 					}
 
+					fmt.Printf("Widget at [%d,%d]: width=%d, height=%d, focused=%v\n",
+						row, col, width, height, entry.Focused)
+
 					var style lipgloss.Style
 					if entry.Focused {
 						style = c.styleCache.GetFocusedStyle(width, height)
@@ -179,6 +186,7 @@ func (c *Container) View() string {
 				}
 			}
 			if content == "" {
+				fmt.Printf("Empty cell at [%d,%d]\n", row, col)
 				style := c.styleCache.GetContentStyle(cellWidth, cellHeight)
 				content = style.Render("")
 			}
