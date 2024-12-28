@@ -20,9 +20,18 @@
   - [x] Set up test coverage reporting
   - [x] Add benchmark tests
 - [ ] Implement core dashboard features
-  - [ ] Add widget container system
+  - [x] Add widget container system
+    - [x] Grid layout management
+    - [x] Widget focus handling
+    - [x] Size calculations
   - [ ] Create widget focus management
+    - [ ] Keyboard navigation
+    - [ ] Focus indicators
+    - [ ] Focus events
   - [ ] Implement basic layout system
+    - [ ] Flexible grid sizing
+    - [ ] Widget positioning
+    - [ ] Layout constraints
 
 ## Widgets to Implement
 - [ ] System Information Widget
