@@ -115,7 +115,7 @@ func (w *Widget) View() string {
 
 			// Task status
 			status := "[ ]"
-			if task.CompletedAt != nil {
+			if task.CompletedAt != nil && !task.CompletedAt.IsZero() {
 				status = "[✓]"
 			}
 
