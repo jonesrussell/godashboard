@@ -22,19 +22,25 @@ jobs:
         with:
           go-version: '1.23'
           cache: true
+          cache-dependency-path: go.sum
 
       - name: Install cross-compilation tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            gcc-mingw-w64-x86-64 \
-            pkg-config
+          sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64 pkg-config
+          
+      - name: Generate Wire code
+        run: |
+          go install github.com/google/wire/cmd/wire@latest
+          wire ./cmd/dashboard
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
+        continue-on-error: ${{ github.env.ACT == 'true' }}
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: ${{ github.env.ACT == 'true' && 'build --snapshot --clean' || 'release --clean' }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CGO_ENABLED: 1  # Enable CGO for native builds 

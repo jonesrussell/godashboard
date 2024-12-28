@@ -38,7 +38,7 @@ A terminal-based system dashboard built with Go, featuring real-time system moni
 
 ## Prerequisites
 
-- Go 1.23 or later
+- Go 1.23 or later (required)
 - Task (task-based build tool)
 - Git
 - MinGW-w64 (for Windows builds)
@@ -125,7 +125,7 @@ task run-external
 
 ### Requirements
 
-- Go 1.23+
+- Go 1.23 (required minimum version)
 - Task
 - Wire (dependency injection)
 - golangci-lint

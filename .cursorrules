@@ -2,6 +2,7 @@
 
 code_style:
 - description: "Follow standard Go conventions and formatting."
+- go_version: "1.23"
 - formatter: gofmt
 - linter: golangci-lint
 - rules:

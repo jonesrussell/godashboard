@@ -54,6 +54,12 @@
   - [x] Add release documentation
   - [x] Test release process locally
   - [x] Organize build output structure
+- [x] Go Version Requirements
+  - [x] Update minimum Go version to 1.23
+  - [x] Update documentation
+  - [x] Update CI/CD workflows
+  - [x] Test with Go 1.23
+  - [x] Update build scripts
 
 ## Core Features (In Progress)
 - [ ] Network Monitoring
