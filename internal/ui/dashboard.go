@@ -2,13 +2,13 @@
 package ui
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/container"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
@@ -64,6 +64,7 @@ type Dashboard struct {
 	height   int
 	showHelp bool
 	debug    bool
+	logger   logger.Logger
 
 	// Cached styles
 	headerStyle lipgloss.Style
@@ -92,11 +93,12 @@ func (d *Dashboard) EnableDebug() {
 }
 
 // NewDashboard creates a new dashboard instance
-func NewDashboard() *Dashboard {
+func NewDashboard(log logger.Logger) *Dashboard {
 	d := &Dashboard{
 		keys:     DefaultKeyMap,
 		help:     help.New(),
 		showHelp: false,
+		logger:   log,
 
 		// Initialize cached styles
 		headerStyle: styles.HeaderStyle,
@@ -108,7 +110,7 @@ func NewDashboard() *Dashboard {
 		needsRefresh: true,
 
 		// Initialize widget container with 2x2 grid
-		container: container.New(2, 2),
+		container: container.New(2, 2, log),
 	}
 
 	// Pre-render static content
@@ -184,8 +186,8 @@ func (d *Dashboard) View() string {
 
 	// Debug header
 	if d.debug {
-		fmt.Println("\n=== Dashboard Debug ===")
-		fmt.Printf("Window size: %dx%d\n", d.width, d.height)
+		d.logger.Debug("=== Dashboard Debug ===")
+		d.logger.Debug("Window size", logger.NewField("width", d.width), logger.NewField("height", d.height))
 	}
 
 	// Add header
@@ -198,7 +200,9 @@ func (d *Dashboard) View() string {
 		b.WriteString(contentStyle.Render("Welcome to the dashboard!"))
 	} else {
 		if d.debug {
-			fmt.Printf("Content area: %dx%d\n", d.width-4, d.height-6)
+			d.logger.Debug("Content area",
+				logger.NewField("width", d.width-4),
+				logger.NewField("height", d.height-6))
 		}
 		b.WriteString(d.container.View())
 	}
@@ -212,7 +216,7 @@ func (d *Dashboard) View() string {
 	}
 
 	if d.debug {
-		fmt.Println("=== End Debug ===")
+		d.logger.Debug("=== End Debug ===")
 	}
 	return b.String()
 }

@@ -100,4 +100,18 @@
 - /docs - Documentation
 - /test - Test utilities
 - /scripts - Build scripts
-- /configs - Configuration files 
+- /configs - Configuration files
+
+## Linting Rules
+
+# Depguard rules
+depguard:
+  list-type: denylist
+  packages:
+    - fmt
+  packages-with-error-message:
+    - fmt: "use logger package for output in dashboard"
+  ignore-files:
+    - "*_test.go"
+    - "cmd/dashboard/main.go"
+    - "internal/logger/*.go" 

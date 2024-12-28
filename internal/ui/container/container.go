@@ -2,11 +2,11 @@
 package container
 
 import (
-	"fmt"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
 )
@@ -35,6 +35,7 @@ type Container struct {
 	rows   int
 	cols   int
 	debug  bool
+	logger logger.Logger
 
 	// Widget management
 	widgets    []WidgetEntry
@@ -47,7 +48,7 @@ type Container struct {
 }
 
 // New creates a new widget container
-func New(rows, cols int) *Container {
+func New(rows, cols int, log logger.Logger) *Container {
 	return &Container{
 		rows:         rows,
 		cols:         cols,
@@ -56,6 +57,7 @@ func New(rows, cols int) *Container {
 		styleCache:   styles.NewStyleCache(),
 		contentCache: make(map[string]string),
 		needsRefresh: true,
+		logger:       log,
 	}
 }
 
@@ -149,7 +151,7 @@ func (c *Container) View() string {
 	}
 
 	if c.debug {
-		fmt.Println("=== Container Debug ===")
+		c.logger.Debug("=== Container Debug ===")
 	}
 
 	// Calculate grid dimensions with spacing
@@ -157,8 +159,12 @@ func (c *Container) View() string {
 	cellHeight := (c.height - 2 - (c.rows-1)*1) / c.rows // Reduced spacing
 
 	if c.debug {
-		fmt.Printf("Grid: %dx%d cells\n", c.cols, c.rows)
-		fmt.Printf("Cell size: %dx%d\n", cellWidth, cellHeight)
+		c.logger.Debug("Grid dimensions",
+			logger.NewField("cols", c.cols),
+			logger.NewField("rows", c.rows))
+		c.logger.Debug("Cell dimensions",
+			logger.NewField("width", cellWidth),
+			logger.NewField("height", cellHeight))
 	}
 
 	// Build grid view
@@ -179,8 +185,12 @@ func (c *Container) View() string {
 					}
 
 					if c.debug {
-						fmt.Printf("Widget [%d,%d]: %dx%d (focused=%v)\n",
-							row, col, width, height, entry.Focused)
+						c.logger.Debug("Widget dimensions",
+							logger.NewField("row", row),
+							logger.NewField("col", col),
+							logger.NewField("width", width),
+							logger.NewField("height", height),
+							logger.NewField("focused", entry.Focused))
 					}
 
 					var style lipgloss.Style
@@ -196,7 +206,9 @@ func (c *Container) View() string {
 			}
 			if content == "" {
 				if c.debug {
-					fmt.Printf("Empty cell [%d,%d]\n", row, col)
+					c.logger.Debug("Empty cell",
+						logger.NewField("row", row),
+						logger.NewField("col", col))
 				}
 				style := c.styleCache.GetContentStyle(cellWidth, cellHeight)
 				content = style.Render("")
@@ -217,7 +229,7 @@ func (c *Container) View() string {
 	}
 
 	if c.debug {
-		fmt.Println("=== End Container Debug ===")
+		c.logger.Debug("=== End Container Debug ===")
 	}
 
 	// Render grid
