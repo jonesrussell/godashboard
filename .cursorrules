@@ -1,245 +1,109 @@
-# Go Dashboard Project
+# .cursorrules file for Go Dashboard Project
 
-## Project Context
-- Terminal UI dashboard using Bubbletea and Lipgloss
-- Integrates with Godo for todo management
-  - Uses Godo's Todo model:
-    ```go
-    type Todo struct {
-        ID        string    `json:"id"`
-        Content   string    `json:"content"`
-        Done      bool      `json:"done"`
-        CreatedAt time.Time `json:"created_at"`
-        UpdatedAt time.Time `json:"updated_at"`
-    }
-    ```
-  - Supports basic operations: create, toggle, update
-  - Uses UUID for unique identification
-  - Tracks creation and update timestamps
-- Follows standard Go project layout
-- Uses Wire for dependency injection
-- Uses Zap for structured logging
+code_style:
+- description: "Follow standard Go conventions and formatting."
+- formatter: gofmt
+- linter: golangci-lint
+- rules:
+  - use_constants_for_magic_numbers: true
+  - document_all_exported_symbols: true
 
-## Lifecycle Management
-- Use Bubbletea's built-in lifecycle management
-  - Signal handling (SIGINT, SIGTERM)
-  - Key event handling (q, ctrl+c)
-  - Terminal cleanup
-- No custom signal handlers needed
-  - Bubbletea handles graceful shutdown
-  - Terminal restoration on exit
-  - Event propagation to components
-- Cleanup responsibilities:
-  - Logger: Flush on exit
-  - UI: Handled by Bubbletea
-  - Terminal: Restored by Bubbletea
-  - Components: Use Init/Update for setup/teardown
+lifecycle_management:
+- description: "Use Bubbletea's built-in lifecycle management."
+- signal_handling: [ SIGINT, SIGTERM ]
+- key_event_handling: [ q, ctrl+c ]
+- cleanup_responsibilities:
+  - logger: "Flush on exit"
+  - ui: "Handled by Bubbletea"
+  - terminal: "Restored by Bubbletea"
+  - components: "Use Init/Update for setup/teardown"
 
-## Code Style
-- Follow standard Go conventions
-- Use gofmt for formatting
-- Apply golangci-lint rules
-- Use constants for magic numbers
-- Document all exported symbols
+dependency_injection:
+- description: "Use Wire for dependency injection."
+- generate_file: wire_gen.go
+- providers_file: providers.go
+- interfaces_file: interfaces.go
+- preference: "Constructor injection over field injection"
+- use_interfaces_for_external_dependencies: true
 
-## Deprecation Handling
-- Always use latest non-deprecated API methods
-- Update code when deprecation notices appear
-- Document any temporary use of deprecated features
-- Examples:
-  - Use p.Run() instead of p.Start() for Bubbletea programs
-  - Check go.dev for latest API changes
+logging:
+- description: "Use uber-go/zap for structured logging."
+- log_levels: [ debug, info, warn, error ]
+- request_id_in_logs: true
+- context_based_request_tracking: true
+- use_test_utilities:
+  - new_test_logger: "testutil.NewTestLogger"
+  - read_log_file: "testutil.ReadLogFile"
 
-## Dependency Management
-- Use wire for dependency injection
-  - Generate wire_gen.go for each package
-  - Keep providers in providers.go
-  - Define interfaces in interfaces.go
-- Prefer constructor injection over field injection
-- Use interfaces for external dependencies
-- Run wire before builds and tests
+ui_components:
+- description: "Use Bubbletea and Lipgloss for terminal UI and styling."
+- pattern: "Model-View-Update"
+- widget_system:
+  - horizontal_vertical_layout: true
+  - focus_based_styling: true
+  - minimum_size_constraints: true
 
-## Logging
-- Use uber-go/zap for logging
-  - Structured logging only
-  - No global logger instances
-  - Log levels: debug, info, warn, error
-  - Include request ID in all logs
-- Configure log rotation
-- Inject logger through wire
-- Use context for request tracking
-- Testing:
-  - Use testutil.NewTestLogger for tests
-  - Use testutil.ReadLogFile for log verification
-  - Clean up log files after tests
+component_design:
+- principles: [ SRP, DRY, ISP ]
+- base_widget:
+  - responsibilities: [ dimension_management, focus_state_management, style_selection, default_command_handling ]
+- interface_segmentation:
+  - widget: "Core component interface (Init/Update/View)"
+  - focusable: "Focus management (Focus/Blur/IsFocused)"
+  - sizable: "Size management (SetSize/GetDimensions)"
+- composition_over_inheritance: true
 
-## UI Components
-- Use Bubbletea for terminal UI
-  - Model-View-Update pattern
-  - Message-based state updates
-  - Built-in lifecycle management
-- Use Lipgloss for styling
-  - Pre-defined styles
-  - Consistent color scheme
-  - Composable layouts
-- Widget System
-  - Horizontal/Vertical layout using Lipgloss
-  - Simple widget composition
-  - Pre-defined styles
-  - Focus-based styling
-  - Keyboard navigation
-  - Minimum size constraints
+performance:
+- metrics:
+  - view_rendering: "< 1ms"
+  - memory_allocations: "< 1KB/op"
+  - cpu_usage: "< 5%"
 
-## Component Design
-- Follow Single Responsibility Principle (SRP)
-  - Each widget handles one specific concern
-  - Separate styling from content
-  - Split complex widgets into subcomponents
-- Don't Repeat Yourself (DRY)
-  - BaseWidget responsibilities:
-    - Dimension management (width/height)
-    - Focus state management
-    - Style selection based on state
-    - Default command handling
-  - Share styles through styles package
-  - Reuse interface definitions
-- Interface Segregation
-  - Widget: Core component interface (Init/Update/View)
-  - Focusable: Focus management (Focus/Blur/IsFocused)
-  - Sizable: Size management (SetSize/GetDimensions)
-  - Keep interfaces small and focused
-- Composition Over Inheritance
-  - Embed BaseWidget in components
-  - Use interfaces for behavior contracts
-  - Favor composition for reuse
-  - Keep components loosely coupled
+testing:
+- categories:
+  - unit_tests: [ "Widget behavior", "State transitions", "Message handling", "Style application" ]
+  - integration_tests: [ "Widget interactions", "Focus management", "Layout behavior", "Event propagation" ]
+  - benchmark_tests: [ "View rendering", "Update performance", "Memory allocations", "Style operations" ]
+- coverage_goals:
+  - core_logic: "> 80%"
+  - ui_components: "> 70%"
+  - integration_paths: "> 60%"
 
-## Widget Implementation
-- BaseWidget provides:
-  - Size management (width/height)
-  - Focus handling (focus/blur)
-  - Style management (based on state)
-  - Default implementations (Init/Update)
-- Concrete Widgets:
-  - Implement specific View logic
-  - Handle domain-specific state
-  - Process relevant messages
-  - Define custom commands
-- Message Handling:
-  - Use tea.Msg for state updates
-  - Handle only relevant messages
-  - Return appropriate commands
-  - Maintain widget state
-- Testing Approach:
-  - Unit test widget behavior
-  - Test state transitions
-  - Verify view rendering
-  - Check message handling
-  - Benchmark performance
+documentation:
+- document_all_exported_symbols: true
+- package_documentation: true
+- include_examples: true
+- keep_line_length_under: 100
 
-## Style Management
-- Pre-defined styles in styles package
-  - Base styles (content, borders)
-  - State-based styles (focused, selected)
-  - Text styles (headers, titles)
-  - Color scheme constants
-- Style Composition
-  - Use Lipgloss style composition
-  - Apply styles based on state
-  - Consistent margins/padding
-  - Flexible dimensions
+error_handling:
+- description: "Return errors, don't panic."
+- use_error_wrapping: true
+- log_errors_with_context: true
+- provide_user_feedback: true
+- handle_edge_cases: true
+- validate_inputs: true
 
-## Performance
-- Minimize state changes
-  - Update only when needed
-  - Avoid unnecessary renders
-  - Use efficient data structures
-- Optimize string handling
-  - Pre-size string builders
-  - Minimize concatenations
-  - Reuse string buffers
-- Pre-define styles
-  - No runtime style creation
-  - Share common styles
-  - Minimize style copies
-- Target metrics:
-  - View rendering < 1ms
-  - Memory allocations < 1KB/op
-  - CPU usage < 5%
+file_organization:
+- directories: [ "/cmd", "/internal", "/pkg", "/docs", "/test", "/scripts", "/configs" ]
 
-## Testing
-- Test Categories:
-  - Unit Tests:
-    - Widget behavior
-    - State transitions
-    - Message handling
-    - Style application
-  - Integration Tests:
-    - Widget interactions
-    - Focus management
-    - Layout behavior
-    - Event propagation
-  - Benchmark Tests:
-    - View rendering
-    - Update performance
-    - Memory allocations
-    - Style operations
-- Test Coverage:
-  - Core logic > 80%
-  - UI components > 70%
-  - Integration paths > 60%
-- Test Utilities:
-  - Mock widgets
-  - Test loggers
-  - Benchmark helpers
-  - Assertion helpers
+deprecation_handling:
+- use_latest_apis: true
+- update_on_deprecation_notices: true
+- document_temporary_deprecated_usage: true
+- example: "Use p.Run() instead of p.Start() for Bubbletea programs"
 
-## Documentation
-- Document all exported symbols
-- Add package documentation
-- Include examples
-- Keep line length < 100
-- Document configuration
-- Add usage examples
-
-## Error Handling
-- Return errors, don't panic
-- Use error wrapping
-- Log errors with context
-- Provide user feedback
-- Handle edge cases
-- Validate inputs
-
-## File Organization
-- /cmd - Main applications
-- /internal - Private packages
-- /pkg - Public packages
-- /docs - Documentation
-- /test - Test utilities
-- /scripts - Build scripts
-- /configs - Configuration files
-
-## Linting Rules
-
-# Depguard rules
-depguard:
-  list-type: denylist
-  packages:
-    - fmt
-  packages-with-error-message:
-    - fmt: "use logger package for output in dashboard"
-  ignore-files:
-    - "*_test.go"
-    - "cmd/dashboard/main.go"
-    - "internal/logger/*.go"
-
-# Test rules
-test:
-  rules:
-    - id: use-testutil-logger
-      pattern: "setupTestLogger"
-      message: "use testutil.NewTestLogger instead of local setupTestLogger functions"
-      severity: error
-      languages: [go]
-      paths:
-        include: ["**/*_test.go"] 
+linting_rules:
+- depguard_rules:
+  - list_type: denylist
+  - packages: [ fmt ]
+  - packages_with_error_message:
+      fmt: "use logger package for output in dashboard"
+  - ignore_files: [ "*_test.go", "cmd/dashboard/main.go", "internal/logger/*.go" ]
+- test_rules:
+  - id: use-testutil-logger
+  - pattern: "setupTestLogger"
+  - message: "use testutil.NewTestLogger instead of local setupTestLogger functions"
+  - severity: error
+  - languages: [ go ]
+  - paths:
+      include: [ "**/*_test.go" ]
