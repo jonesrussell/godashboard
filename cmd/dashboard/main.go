@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -18,10 +19,15 @@ func main() {
 
 	if *external {
 		// Start a new process without the -external flag
-		cmd := exec.Command(os.Args[0])
-		cmd.Stdin = os.Stdin
-		cmd.Stdout = os.Stdout
-		cmd.Stderr = os.Stderr
+		var cmd *exec.Cmd
+		if runtime.GOOS == "windows" {
+			cmd = exec.Command("cmd", "/c", "start", os.Args[0])
+		} else {
+			cmd = exec.Command(os.Args[0])
+			cmd.Stdin = os.Stdin
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+		}
 		if err := cmd.Start(); err != nil {
 			fmt.Printf("Error starting external process: %v\n", err)
 			os.Exit(1)
