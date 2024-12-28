@@ -7,11 +7,12 @@ on:
 
 permissions:
   contents: write
+  discussions: write
   packages: write
 
 jobs:
   release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -24,11 +25,14 @@ jobs:
           cache: true
           cache-dependency-path: go.sum
 
-      - name: Install cross-compilation tools
+      - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends gcc-mingw-w64-x86-64 pkg-config
-          
+          sudo apt-get install -y --no-install-recommends \
+            gcc \
+            gcc-mingw-w64-x86-64 \
+            pkg-config
+
       - name: Generate Wire code
         run: |
           go install github.com/google/wire/cmd/wire@latest
@@ -36,11 +40,83 @@ jobs:
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v5
-        continue-on-error: ${{ github.env.ACT == 'true' }}
         with:
           distribution: goreleaser
-          version: latest
-          args: ${{ github.env.ACT == 'true' && 'build --snapshot --clean' || 'release --clean' }}
+          version: 'v1.26.2'
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          CGO_ENABLED: 1  # Enable CGO for native builds 
+          CGO_ENABLED: 1
+
+      - name: Create Discussion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const tag = context.ref.replace('refs/tags/', '');
+            
+            try {
+              // First get the release by tag
+              const releases = await github.rest.repos.listReleases({
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+              
+              const release = releases.data.find(r => r.tag_name === tag);
+              if (!release) {
+                console.log('Release not found for tag:', tag);
+                return;
+              }
+
+              // Get discussion categories using the GraphQL API
+              const query = `
+                query($owner: String!, $repo: String!) {
+                  repository(owner: $owner, name: $repo) {
+                    discussionCategories(first: 10) {
+                      nodes {
+                        id
+                        name
+                      }
+                    }
+                  }
+                }
+              `;
+
+              const result = await github.graphql(query, {
+                owner: context.repo.owner,
+                repo: context.repo.repo
+              });
+
+              const categories = result.repository.discussionCategories.nodes;
+              const releasesCategory = categories.find(c => c.name === 'Releases');
+              
+              if (!releasesCategory) {
+                console.log('Releases discussion category not found');
+                return;
+              }
+
+              // Create the discussion using GraphQL
+              const createDiscussion = `
+                mutation($input: CreateDiscussionInput!) {
+                  createDiscussion(input: $input) {
+                    discussion {
+                      id
+                      url
+                    }
+                  }
+                }
+              `;
+
+              const discussionResult = await github.graphql(createDiscussion, {
+                input: {
+                  repositoryId: result.repository.id,
+                  categoryId: releasesCategory.id,
+                  title: `Release ${tag}`,
+                  body: release.body || 'No release notes provided.'
+                }
+              });
+
+              console.log('Discussion created:', discussionResult.createDiscussion.discussion.url);
+            } catch (error) {
+              console.log('Error creating discussion:', error);
+              // Don't fail the workflow if discussion creation fails
+            } 
