@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
 )
@@ -145,6 +146,10 @@ func (c *Container) View() string {
 		return "No widgets"
 	}
 
+	// Calculate grid dimensions with spacing
+	cellWidth := (c.width - 4 - (c.cols-1)*2) / c.cols   // Account for spacing between cells
+	cellHeight := (c.height - 4 - (c.rows-1)*1) / c.rows // Account for spacing between rows
+
 	// Build grid view
 	var grid [][]string
 	for row := 0; row < c.rows; row++ {
@@ -154,27 +159,42 @@ func (c *Container) View() string {
 			var content string
 			for _, entry := range c.widgets {
 				if c.isWidgetInCell(entry, row, col) {
-					style := c.styleCache.GetContentStyle(
-						c.getWidgetWidth(entry),
-						c.getWidgetHeight(entry),
-					)
-					if entry.Focused {
-						style = style.BorderForeground(styles.Primary)
+					width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*2
+					height := cellHeight*entry.Config.RowSpan + (entry.Config.RowSpan-1)*1
+
+					// Ensure minimum width
+					if width < entry.Config.MinWidth {
+						width = entry.Config.MinWidth
 					}
+
+					var style lipgloss.Style
+					if entry.Focused {
+						style = c.styleCache.GetFocusedStyle(width, height)
+					} else {
+						style = c.styleCache.GetContentStyle(width, height)
+					}
+
 					content = style.Render(entry.Widget.View())
 					break
 				}
 			}
 			if content == "" {
-				style := c.styleCache.GetContentStyle(
-					c.width/c.cols-4,
-					c.height/c.rows-2,
-				)
+				style := c.styleCache.GetContentStyle(cellWidth, cellHeight)
 				content = style.Render("")
 			}
 			rowContent = append(rowContent, content)
+
+			// Add spacing between columns
+			if col < c.cols-1 {
+				rowContent = append(rowContent, strings.Repeat(" ", 2))
+			}
 		}
 		grid = append(grid, rowContent)
+
+		// Add spacing between rows
+		if row < c.rows-1 {
+			grid = append(grid, []string{strings.Repeat("\n", 1)})
+		}
 	}
 
 	// Render grid
@@ -193,13 +213,29 @@ func (c *Container) View() string {
 
 // updateGridSizes calculates and updates widget sizes based on grid configuration
 func (c *Container) updateGridSizes() {
-	baseWidth := (c.width - 4) / c.cols
-	baseHeight := (c.height - 4) / c.rows
+	// Ensure minimum container dimensions
+	if c.width < 40 {
+		c.width = 40
+	}
+	if c.height < 20 {
+		c.height = 20
+	}
+
+	// Calculate cell dimensions with spacing
+	cellWidth := (c.width - 4 - (c.cols-1)*2) / c.cols
+	if cellWidth < 20 {
+		cellWidth = 20
+	}
+
+	cellHeight := (c.height - 4 - (c.rows-1)*1) / c.rows
+	if cellHeight < 10 {
+		cellHeight = 10
+	}
 
 	for i := range c.widgets {
 		entry := &c.widgets[i]
-		width := baseWidth*entry.Config.ColSpan - 4
-		height := baseHeight*entry.Config.RowSpan - 2
+		width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*2
+		height := cellHeight*entry.Config.RowSpan + (entry.Config.RowSpan-1)*1
 
 		// Ensure minimum width
 		if width < entry.Config.MinWidth {
@@ -212,8 +248,12 @@ func (c *Container) updateGridSizes() {
 
 // getWidgetWidth returns the width for a widget based on its configuration
 func (c *Container) getWidgetWidth(entry WidgetEntry) int {
-	baseWidth := (c.width - 4) / c.cols
-	width := baseWidth*entry.Config.ColSpan - 4
+	cellWidth := (c.width - 4 - (c.cols-1)*2) / c.cols
+	if cellWidth < 20 {
+		cellWidth = 20
+	}
+
+	width := cellWidth*entry.Config.ColSpan + (entry.Config.ColSpan-1)*2
 	if width < entry.Config.MinWidth {
 		width = entry.Config.MinWidth
 	}
@@ -222,8 +262,12 @@ func (c *Container) getWidgetWidth(entry WidgetEntry) int {
 
 // getWidgetHeight returns the height for a widget based on its configuration
 func (c *Container) getWidgetHeight(entry WidgetEntry) int {
-	baseHeight := (c.height - 4) / c.rows
-	return baseHeight*entry.Config.RowSpan - 2
+	cellHeight := (c.height - 4 - (c.rows-1)*1) / c.rows
+	if cellHeight < 10 {
+		cellHeight = 10
+	}
+
+	return cellHeight*entry.Config.RowSpan + (entry.Config.RowSpan-1)*1
 }
 
 // isWidgetInCell checks if a widget occupies the given grid cell

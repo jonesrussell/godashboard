@@ -67,11 +67,44 @@ func (w *Widget) View() string {
 	var b strings.Builder
 	b.Grow(w.width * w.height)
 
-	// Format system info
-	b.WriteString("System Information\n\n")
-	b.WriteString(fmt.Sprintf("CPU Usage:    %.1f%%\n", w.cpuUsage))
-	b.WriteString(fmt.Sprintf("Memory Usage: %.1f%%\n", w.memoryUsage))
-	b.WriteString(fmt.Sprintf("Disk Usage:   %.1f%%\n", w.diskUsage))
+	// Title
+	title := lipgloss.NewStyle().
+		Bold(true).
+		Foreground(styles.Primary).
+		Render("System Information")
+	b.WriteString(title)
+	b.WriteString("\n\n")
+
+	// Calculate bar width (minimum 10 characters)
+	barWidth := w.width - 20
+	if barWidth < 10 {
+		barWidth = 10
+	}
+
+	// Format system info with bars
+	cpuBar := createUsageBar(w.cpuUsage, barWidth)
+	memBar := createUsageBar(w.memoryUsage, barWidth)
+	diskBar := createUsageBar(w.diskUsage, barWidth)
+
+	// CPU
+	b.WriteString(lipgloss.NewStyle().Bold(true).Render("CPU"))
+	b.WriteString("\n")
+	b.WriteString(fmt.Sprintf("%.1f%% ", w.cpuUsage))
+	b.WriteString(cpuBar)
+	b.WriteString("\n\n")
+
+	// Memory
+	b.WriteString(lipgloss.NewStyle().Bold(true).Render("Memory"))
+	b.WriteString("\n")
+	b.WriteString(fmt.Sprintf("%.1f%% ", w.memoryUsage))
+	b.WriteString(memBar)
+	b.WriteString("\n\n")
+
+	// Disk
+	b.WriteString(lipgloss.NewStyle().Bold(true).Render("Disk"))
+	b.WriteString("\n")
+	b.WriteString(fmt.Sprintf("%.1f%% ", w.diskUsage))
+	b.WriteString(diskBar)
 
 	return w.style.Width(w.width).Height(w.height).Render(b.String())
 }
@@ -126,4 +159,32 @@ func (w *Widget) updateSystemInfo() tea.Msg {
 		memory: memPercent,
 		disk:   diskPercent,
 	}
+}
+
+// createUsageBar creates a visual bar representing a percentage
+func createUsageBar(percent float64, width int) string {
+	// Ensure valid width
+	if width < 1 {
+		width = 1
+	}
+
+	// Ensure valid percentage
+	if percent < 0 {
+		percent = 0
+	} else if percent > 100 {
+		percent = 100
+	}
+
+	// Calculate filled and empty portions
+	filled := int(float64(width) * percent / 100)
+	if filled > width {
+		filled = width
+	}
+	empty := width - filled
+
+	// Create the bar with colors
+	bar := lipgloss.NewStyle().Foreground(styles.Primary).Render(strings.Repeat("█", filled)) +
+		lipgloss.NewStyle().Foreground(styles.Subtle).Render(strings.Repeat("░", empty))
+
+	return bar
 }

@@ -35,9 +35,11 @@
 
 ## Widgets to Implement
 - [x] System Information Widget
-  - [x] CPU usage
-  - [x] Memory usage
-  - [x] Disk space
+  - [x] CPU usage with progress bars
+  - [x] Memory usage with progress bars
+  - [x] Disk space with progress bars
+  - [ ] Network usage monitoring
+  - [ ] Temperature monitoring
 - [ ] Godo Integration Widget
   - [ ] Create new todos
   - [ ] Read/list todos with filters
@@ -48,24 +50,52 @@
 - [ ] Process List Widget
   - [ ] Process listing
   - [ ] Resource usage per process
+  - [ ] Sort by CPU/Memory
+  - [ ] Process details view
+  - [ ] Kill process support
 
 ## UI Improvements
-- [ ] Add color themes
-  - [ ] Light theme
-  - [ ] Dark theme
-  - [ ] Custom theme support
-- [ ] Implement responsive layouts
-- [ ] Add animations for transitions
+- [x] Add color themes
+  - [x] Primary/Secondary colors
+  - [x] Border colors
+  - [x] Text colors
+  - [x] Focus indicators
+- [x] Implement responsive layouts
+  - [x] Minimum size constraints
+  - [x] Dynamic resizing
+  - [x] Grid cell spacing
+- [ ] Add animations
+  - [ ] Loading spinners
+  - [ ] Progress bars
+  - [ ] Focus transitions
 - [ ] Create loading indicators
+  - [ ] Widget loading states
+  - [ ] Data refresh indicators
+  - [ ] Error states
 
 ## Features
 - [ ] Configuration system
   - [ ] YAML/JSON config file support
   - [ ] Runtime configuration changes
+  - [ ] Color theme configuration
+  - [ ] Widget layout persistence
 - [ ] Widget plugin system
+  - [ ] Plugin interface
+  - [ ] Dynamic loading
+  - [ ] Configuration
+  - [ ] Documentation
 - [ ] Custom keybinding support
+  - [ ] Key mapping configuration
+  - [ ] Action binding
+  - [ ] Conflict resolution
 - [ ] Session persistence
-- [ ] Export/Import dashboard layouts
+  - [ ] Widget state
+  - [ ] Layout configuration
+  - [ ] User preferences
+- [ ] Export/Import layouts
+  - [ ] Layout serialization
+  - [ ] Config export/import
+  - [ ] Theme sharing
 
 ## Documentation
 - [ ] Add godoc comments
@@ -86,9 +116,9 @@
 
 ## Optimization
 - [x] Improve rendering performance
-  - [x] Reduce View allocations (from 38KB/op to 5B/op)
-  - [x] Optimize resize handling (from 197KB/op to 32B/op)
-  - [x] Optimize help toggle (from 80KB/op to 36KB/op)
+  - [x] Reduce View allocations
+  - [x] Optimize resize handling
+  - [x] Optimize help toggle
 - [x] Reduce memory usage
   - [x] Add style caching
   - [x] Add content caching
@@ -106,7 +136,20 @@
   - [ ] Network interface status
   - [ ] Bandwidth usage
 - [ ] Mouse support
+  - [ ] Widget selection
+  - [ ] Scrolling
+  - [ ] Context menus
 - [ ] Terminal resize handling
+  - [ ] Smooth resizing
+  - [ ] Layout preservation
 - [ ] Widget drag and drop
+  - [ ] Visual indicators
+  - [ ] Grid snapping
 - [ ] Widget state persistence
-- [ ] Remote data source support 
+  - [ ] Configuration
+  - [ ] Layout
+  - [ ] User preferences
+- [ ] Remote data source support
+  - [ ] API integration
+  - [ ] Data caching
+  - [ ] Error handling 

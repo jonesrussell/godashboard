@@ -8,42 +8,59 @@ const (
 	DefaultHeaderWidth = 30
 )
 
-// Primary is the main color used in the UI theme
-var Primary = lipgloss.Color("#2196F3")
-
-// Secondary is the complementary color used in the UI theme
-var Secondary = lipgloss.Color("#FFB74D")
+// Colors
+var (
+	Primary   = lipgloss.Color("#2196F3")
+	Secondary = lipgloss.Color("#FFB74D")
+	Border    = lipgloss.Color("#3C3C3C")
+	Text      = lipgloss.Color("#FFFFFF")
+	Subtle    = lipgloss.Color("#4A4A4A")
+	Highlight = lipgloss.Color("#82AAFF")
+)
 
 // BaseStyle defines the base styling for all UI elements
 var BaseStyle = lipgloss.NewStyle().
-	Padding(1).
-	BorderStyle(lipgloss.RoundedBorder())
+	BorderStyle(lipgloss.RoundedBorder()).
+	BorderForeground(Border).
+	Foreground(Text).
+	Padding(1)
 
 // HeaderStyle defines the styling for header elements
 var HeaderStyle = BaseStyle.Copy().
 	Bold(true).
 	Foreground(Primary).
+	BorderStyle(lipgloss.DoubleBorder()).
 	BorderForeground(Primary).
+	Align(lipgloss.Center).
 	Width(DefaultHeaderWidth)
 
 // ContentStyle defines the styling for content areas
 var ContentStyle = BaseStyle.Copy().
-	BorderForeground(Secondary)
+	BorderForeground(Border).
+	BorderStyle(lipgloss.RoundedBorder())
 
 // FooterStyle defines the styling for footer elements
 var FooterStyle = BaseStyle.Copy().
 	BorderStyle(lipgloss.HiddenBorder()).
+	Foreground(Subtle).
 	Align(lipgloss.Center)
+
+// FocusedStyle defines the styling for focused elements
+var FocusedStyle = ContentStyle.Copy().
+	BorderForeground(Primary).
+	BorderStyle(lipgloss.DoubleBorder())
 
 // StyleCache provides cached styles for different dimensions
 type StyleCache struct {
 	contentStyles map[string]lipgloss.Style
+	focusedStyles map[string]lipgloss.Style
 }
 
 // NewStyleCache creates a new style cache
 func NewStyleCache() *StyleCache {
 	return &StyleCache{
 		contentStyles: make(map[string]lipgloss.Style),
+		focusedStyles: make(map[string]lipgloss.Style),
 	}
 }
 
@@ -58,6 +75,20 @@ func (c *StyleCache) GetContentStyle(width, height int) lipgloss.Style {
 		Width(width).
 		Height(height)
 	c.contentStyles[key] = style
+	return style
+}
+
+// GetFocusedStyle returns a cached focused style for the given dimensions
+func (c *StyleCache) GetFocusedStyle(width, height int) lipgloss.Style {
+	key := styleKey(width, height)
+	if style, ok := c.focusedStyles[key]; ok {
+		return style
+	}
+
+	style := FocusedStyle.Copy().
+		Width(width).
+		Height(height)
+	c.focusedStyles[key] = style
 	return style
 }
 

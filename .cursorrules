@@ -41,43 +41,63 @@
 - Inject logger through wire
 - Use context for request tracking
 
-## Go Best Practices
-- Use context.Context in all long-running operations
-- Return errors instead of panics
-- Use meaningful variable/function names
-- Keep functions under 30 lines
-- Implement interfaces close to use
-- Use table-driven tests
-- Handle errors explicitly
+## UI Components
+- Use Bubbletea for terminal UI
+- Use Lipgloss for styling
+  - Cache styles for performance
+  - Use consistent color scheme
+  - Support light/dark themes
+- Widget System
+  - Grid-based layout
+  - Focus management
+  - Keyboard navigation
+  - Minimum size constraints
+  - Content caching
+  - Style caching
 
-## File Patterns
-- *.go: gofmt
-- go.mod: none
-- *.md: prettier
-- provider.go: wire providers
-- interfaces.go: package interfaces
-- *_test.go: table-driven tests
-
-## Linting
-- golangci-lint with custom config
-- Enforce consistent code style
-- No magic numbers
-- Document exported symbols
-- Use build tags correctly
+## Performance
+- Cache rendered content
+- Cache styles
+- Pre-render static content
+- Minimize allocations
+- Use string builders
+- Implement dirty region tracking
+- Target metrics:
+  - View rendering < 1ms
+  - Memory allocations < 1KB/op
+  - CPU usage < 5%
 
 ## Testing
 - Use table-driven tests
-- Require test coverage > 80%
 - Mock external dependencies
 - Test both success and error paths
-- Add benchmark tests for UI
-- Test wire configurations
-- Include integration tests
+- Add benchmark tests
+- Coverage > 80%
+- Test all UI components
+- Test layout system
+- Test focus management
 
 ## Documentation
-- All exported functions must be documented
-- Include examples in doc comments
-- Keep line length < 100 chars
-- Document configuration options
+- Document all exported symbols
 - Add package documentation
-- Include usage examples 
+- Include examples
+- Keep line length < 100
+- Document configuration
+- Add usage examples
+
+## Error Handling
+- Return errors, don't panic
+- Use error wrapping
+- Log errors with context
+- Provide user feedback
+- Handle edge cases
+- Validate inputs
+
+## File Organization
+- /cmd - Main applications
+- /internal - Private packages
+- /pkg - Public packages
+- /docs - Documentation
+- /test - Test utilities
+- /scripts - Build scripts
+- /configs - Configuration files 
