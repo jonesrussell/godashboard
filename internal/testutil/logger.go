@@ -4,6 +4,7 @@ package testutil
 import (
 	"bytes"
 	"encoding/json"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -53,4 +54,13 @@ func AssertLogEntry(t *testing.T, buf *bytes.Buffer, expectedLevel, expectedMsg 
 func ClearBuffer(buf *bytes.Buffer) *bytes.Buffer {
 	buf.Reset()
 	return buf
+}
+
+// ReadLogFile reads the contents of a log file
+func ReadLogFile(path string) (string, error) {
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		return "", err
+	}
+	return string(contents), nil
 }

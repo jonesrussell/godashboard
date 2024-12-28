@@ -16,7 +16,7 @@
   - [x] Set up test utilities and helpers
   - [x] Add logger package tests
   - [x] Add UI component tests
-  - [ ] Add integration tests
+  - [x] Add integration tests
   - [x] Set up test coverage reporting
   - [ ] Add benchmark tests
 - [ ] Implement core dashboard features
