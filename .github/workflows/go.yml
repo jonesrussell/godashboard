@@ -1,0 +1,115 @@
+name: Build and Test
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/go.yml'
+      - 'Taskfile.yml'
+  pull_request:
+    paths:
+      - '**.go'
+      - 'go.mod'
+      - 'go.sum'
+      - '.github/workflows/go.yml'
+      - 'Taskfile.yml'
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      go-cache-key: ${{ steps.go-cache.outputs.cache-key }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: go-cache
+        run: echo "cache-key=${{ hashFiles('**/go.sum') }}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: [prepare]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows
+            arch: amd64
+            artifact: godashboard.exe
+            cc: x86_64-w64-mingw32-gcc
+          - os: linux
+            arch: amd64
+            artifact: godashboard
+            cc: gcc
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+      
+      # Install system dependencies for terminal UI and cross-compilation
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc \
+            mingw-w64 \
+            pkg-config
+
+      # Cache build tools and dependencies
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/go/bin
+          key: ${{ runner.os }}-${{ matrix.os }}-${{ matrix.arch }}-go-${{ needs.prepare.outputs.go-cache-key }}
+          restore-keys: |
+            ${{ runner.os }}-${{ matrix.os }}-${{ matrix.arch }}-go-
+
+      - name: Install Wire
+        run: go install github.com/google/wire/cmd/wire@latest
+
+      - name: Install Task
+        uses: arduino/setup-task@v2
+        with:
+          version: 3.x
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+
+      # Run linter
+      - name: Lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: latest
+
+      # Generate wire code
+      - name: Generate Wire code
+        run: wire ./...
+
+      # Build with matrix variables
+      - name: Build binary
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CC: ${{ matrix.cc }}
+        run: task build
+
+      # Run tests
+      - name: Test
+        run: task test
+
+      # Add versioning based on git tags
+      - name: Get version
+        id: get_version
+        run: |
+          VERSION=$(git describe --tags --always --dirty)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      # Upload individual artifacts with version
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: godashboard-${{ steps.get_version.outputs.version }}-${{ matrix.os }}-${{ matrix.arch }}
+          path: bin/${{ matrix.artifact }} 
