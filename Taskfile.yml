@@ -49,20 +49,19 @@ tasks:
     desc: Build the application
     deps: [ wire ]
     cmds:
-    - powershell New-Item -ItemType Directory -Force -Path {{.BUILD_DIR}}
-    - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}}.exe ./cmd/dashboard
+    - powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1 -BuildDir {{.BUILD_DIR}} -BinaryName {{.BINARY_NAME}}
 
   run:
     desc: Run the application
     deps: [ build ]
     cmds:
-    - '{{.BUILD_DIR}}/{{.BINARY_NAME}}.exe'
+    - '{{.BUILD_DIR}}/windows_amd64/bin/{{.BINARY_NAME}}.exe'
 
   run-external:
     desc: Run the application in a new window
     deps: [ build ]
     cmds:
-    - '{{.BUILD_DIR}}/{{.BINARY_NAME}}.exe -external'
+    - '{{.BUILD_DIR}}/windows_amd64/bin/{{.BINARY_NAME}}.exe -external'
 
   clean:
     desc: Clean build artifacts
@@ -107,11 +106,24 @@ tasks:
     desc: Run the application with debug output
     deps: [ build ]
     cmds:
-    - build/dashboard.exe -debug
+    - '{{.BUILD_DIR}}/windows_amd64/bin/{{.BINARY_NAME}}.exe -debug'
+
+  release-test-setup:
+    desc: Test cross-compilation setup locally
+    cmds:
+    - |
+      powershell -Command "
+        $env:CGO_ENABLED='1'
+        $env:CC='gcc'
+        $env:GOOS='windows'
+        $env:GOARCH='amd64'
+        $env:PATH='c:\mingw64\bin;' + $env:PATH
+        go build -o build/test.exe ./cmd/dashboard
+      "
 
   release-dry-run:
     desc: Test release process locally without publishing
-    deps: [ wire ]
+    deps: [ wire, release-test-setup ]
     cmds:
     - goreleaser release --snapshot --clean --skip=publish,validate
 

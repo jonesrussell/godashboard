@@ -41,8 +41,17 @@ A terminal-based system dashboard built with Go, featuring real-time system moni
 - Go 1.23 or later
 - Task (task-based build tool)
 - Git
+- MinGW-w64 (for Windows builds)
 
 ## Installation
+
+### From Release
+
+1. Download the latest release for your platform from the [Releases page](https://github.com/jonesrussell/dashboard/releases)
+2. Extract the archive to your desired location
+3. Run the `dashboard` executable from the `bin` directory
+
+### From Source
 
 1. Clone the repository:
 ```bash
@@ -58,6 +67,21 @@ task deps
 3. Build the project:
 ```bash
 task build
+```
+
+The build output will be organized as follows:
+```
+build/
+└── windows_amd64/          # or linux_amd64
+    ├── bin/
+    │   └── dashboard.exe   # Main executable
+    ├── docs/               # Documentation
+    │   ├── images/
+    │   ├── API.md
+    │   ├── ARCHITECTURE.md
+    │   └── DEVELOPMENT.md
+    ├── LICENSE
+    └── README.md
 ```
 
 ## Usage
@@ -105,6 +129,8 @@ task run-external
 - Task
 - Wire (dependency injection)
 - golangci-lint
+- MinGW-w64 (for Windows builds)
+- GoReleaser (for releases)
 
 ### Setup Development Environment
 
@@ -127,6 +153,24 @@ task lint
 ```bash
 task bench
 ```
+
+### Release Process
+
+1. Test the release locally:
+```bash
+task release-dry-run
+```
+
+2. Create and push a new tag:
+```bash
+git tag -a v0.1.0 -m "Release v0.1.0"
+git push origin v0.1.0
+```
+
+3. The release workflow will automatically:
+- Build binaries for Windows and Linux
+- Create release archives with documentation
+- Publish the release on GitHub
 
 ### Project Structure
 

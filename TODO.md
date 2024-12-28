@@ -48,6 +48,12 @@
   - [x] Add architecture documentation
   - [x] Add API documentation
   - [x] Add development guide
+- [x] Release Process Setup
+  - [x] Configure GoReleaser
+  - [x] Set up GitHub Actions workflow
+  - [x] Add release documentation
+  - [x] Test release process locally
+  - [x] Organize build output structure
 
 ## Core Features (In Progress)
 - [ ] Network Monitoring
@@ -95,15 +101,15 @@
   - [ ] Key binding customization
 
 ## Documentation
-- [ ] Expand User Documentation
-  - [ ] Add configuration examples
-  - [ ] Add troubleshooting guide
-  - [ ] Add performance tuning guide
-- [ ] Expand Developer Documentation
-  - [ ] Add contribution guidelines
-  - [ ] Add code style guide
-  - [ ] Add testing guide
-  - [ ] Add release process
+- [x] Expand User Documentation
+  - [x] Add configuration examples
+  - [x] Add troubleshooting guide
+  - [x] Add performance tuning guide
+- [x] Expand Developer Documentation
+  - [x] Add contribution guidelines
+  - [x] Add code style guide
+  - [x] Add testing guide
+  - [x] Add release process
 - [ ] API Documentation
   - [ ] Add OpenAPI/Swagger specs
   - [ ] Add rate limiting details
@@ -153,4 +159,10 @@
   - [x] Unit tests
   - [x] Integration tests
   - [x] Benchmarks
-  - [x] Test utilities 
+  - [x] Test utilities
+- [x] Release Process
+  - [x] GoReleaser configuration
+  - [x] GitHub Actions workflow
+  - [x] Release documentation
+  - [x] Local testing support
+  - [x] Build structure organization 
