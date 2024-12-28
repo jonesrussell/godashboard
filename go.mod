@@ -1,4 +1,4 @@
-module github.com/yourusername/dashboard
+module github.com/jonesrussell/dashboard
 
 go 1.23
 

@@ -10,6 +10,14 @@
 - Use gofmt for formatting
 - Apply golangci-lint rules
 
+## Deprecation Handling
+- Always use latest non-deprecated API methods
+- Update code when deprecation notices appear
+- Document any temporary use of deprecated features
+- Examples:
+  - Use p.Run() instead of p.Start() for Bubbletea programs
+  - Check go.dev for latest API changes
+
 ## Dependency Management
 - Use wire for dependency injection
   - Generate wire_gen.go for each package

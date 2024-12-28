@@ -5,7 +5,7 @@ import (
 	"os"
 
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/yourusername/dashboard/internal/ui"
+	"github.com/jonesrussell/dashboard/internal/ui"
 )
 
 func main() {
@@ -14,7 +14,7 @@ func main() {
 		tea.WithMouseCellMotion(), // Enable mouse support
 	)
 
-	if err := p.Start(); err != nil {
+	if _, err := p.Run(); err != nil {
 		fmt.Printf("Error running program: %v", err)
 		os.Exit(1)
 	}

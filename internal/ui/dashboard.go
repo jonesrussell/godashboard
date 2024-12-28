@@ -6,6 +6,7 @@ import (
 	"github.com/charmbracelet/bubbles/help"
 	"github.com/charmbracelet/bubbles/key"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jonesrussell/dashboard/internal/ui/styles"
 )
 
 // KeyMap defines the keybindings for the dashboard
@@ -14,6 +15,19 @@ type KeyMap struct {
 	Help  key.Binding
 	Tab   key.Binding
 	Enter key.Binding
+}
+
+// ShortHelp implements help.KeyMap
+func (k KeyMap) ShortHelp() []key.Binding {
+	return []key.Binding{k.Help, k.Quit}
+}
+
+// FullHelp implements help.KeyMap
+func (k KeyMap) FullHelp() [][]key.Binding {
+	return [][]key.Binding{
+		{k.Help, k.Quit},
+		{k.Tab, k.Enter},
+	}
 }
 
 // Default keybindings
@@ -103,16 +117,16 @@ func (d *Dashboard) View() string {
 }
 
 func (d *Dashboard) renderHeader() string {
-	return HeaderStyle.Render("Dashboard")
+	return styles.HeaderStyle.Render("Dashboard")
 }
 
 func (d *Dashboard) renderContent() string {
-	return ContentStyle.
+	return styles.ContentStyle.
 		Width(d.width - 4).
 		Height(d.height - 6).
 		Render("Welcome to the dashboard!")
 }
 
 func (d *Dashboard) renderFooter() string {
-	return FooterStyle.Render("Press ? for help")
+	return styles.FooterStyle.Render("Press ? for help")
 }
