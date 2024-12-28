@@ -11,6 +11,7 @@ import (
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/container"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
+	"github.com/jonesrussell/dashboard/internal/ui/widgets/sysinfo"
 )
 
 // KeyMap defines the keybindings for the dashboard
@@ -100,6 +101,16 @@ func NewDashboard() *Dashboard {
 	// Pre-render static content
 	d.headerContent = d.headerStyle.Render("Dashboard")
 	d.footerContent = d.footerStyle.Render("Press ? for help")
+
+	// Add system info widget
+	sysInfo := sysinfo.New()
+	d.container.AddWidgetWithConfig(sysInfo, container.GridConfig{
+		Row:      0,
+		Col:      0,
+		RowSpan:  1,
+		ColSpan:  2,
+		MinWidth: 40,
+	})
 
 	return d
 }

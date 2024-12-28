@@ -24,20 +24,20 @@
     - [x] Grid layout management
     - [x] Widget focus handling
     - [x] Size calculations
-  - [ ] Create widget focus management
-    - [ ] Keyboard navigation
-    - [ ] Focus indicators
-    - [ ] Focus events
-  - [ ] Implement basic layout system
-    - [ ] Flexible grid sizing
-    - [ ] Widget positioning
-    - [ ] Layout constraints
+  - [x] Create widget focus management
+    - [x] Keyboard navigation
+    - [x] Focus indicators
+    - [x] Focus events
+  - [x] Implement basic layout system
+    - [x] Flexible grid sizing
+    - [x] Widget positioning
+    - [x] Layout constraints
 
 ## Widgets to Implement
-- [ ] System Information Widget
-  - [ ] CPU usage
-  - [ ] Memory usage
-  - [ ] Disk space
+- [x] System Information Widget
+  - [x] CPU usage
+  - [x] Memory usage
+  - [x] Disk space
 - [ ] Godo Integration Widget
   - [ ] Create new todos
   - [ ] Read/list todos with filters
