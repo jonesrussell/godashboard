@@ -28,11 +28,11 @@ A terminal-based system dashboard built with Go, featuring real-time system moni
   - Debug output support
   - Comprehensive test logging
   - Request tracking
-- Comprehensive testing
-  - Unit and integration tests
-  - Performance benchmarks
-  - Test utilities and helpers
-  - Standardized logging
+- Task Management
+  - Integration with Godo API
+  - Create, read, update, delete tasks
+  - Task completion tracking
+  - Loading and error states
 
 ## Prerequisites
 
@@ -62,6 +62,10 @@ task build
 
 Run the dashboard:
 ```bash
+# Configure API endpoint (optional)
+export GODO_API_URL="http://localhost:8080"  # Default: http://host.docker.internal:8080
+
+# Run dashboard
 task run
 ```
 
@@ -79,9 +83,17 @@ task run-external
 
 - `Tab` - Navigate between widgets
 - `Enter` - Select/activate widget
+- `Space` - Toggle task completion
+- `n` - Create new task
+- `d` - Delete selected task
 - `q` or `Ctrl+C` - Quit
 - `?` - Toggle help
-- `d` - Toggle debug mode
+
+## Documentation
+
+- [Architecture Overview](docs/ARCHITECTURE.md)
+- [API Documentation](docs/API.md)
+- [Development Guide](docs/DEVELOPMENT.md)
 
 ## Development
 
@@ -96,7 +108,7 @@ task run-external
 
 1. Install development tools:
 ```bash
-task setup
+task install-tools
 ```
 
 2. Run tests:
@@ -120,6 +132,10 @@ task bench
 .
 ├── cmd/
 │   └── dashboard/     # Main application
+├── docs/             # Documentation
+│   ├── ARCHITECTURE.md
+│   ├── API.md
+│   └── DEVELOPMENT.md
 ├── internal/
 │   ├── logger/        # Logging package
 │   ├── testutil/      # Test utilities
@@ -131,60 +147,6 @@ task bench
 ├── pkg/              # Public packages
 └── test/            # Test utilities
 ```
-
-### Testing
-
-The project uses Go's testing framework with additional utilities:
-
-- `testutil.NewTestLogger` - Creates a logger for tests
-- `testutil.ReadLogFile` - Reads and verifies log output
-- `testutil.NewUITest` - Helps test UI components
-
-Example test:
-```go
-func TestMyFeature(t *testing.T) {
-    log, logPath := testutil.NewTestLogger(t, "test-name")
-    
-    // Use the logger in your test
-    log.Info("Test started")
-    
-    // Verify log output
-    content, err := testutil.ReadLogFile(logPath)
-    require.NoError(t, err)
-    assert.Contains(t, content, "Test started")
-}
-```
-
-### Widget Development
-
-Widgets must implement the `components.Widget` interface:
-
-```go
-type Widget interface {
-    // Core Bubbletea interface
-    Init() tea.Cmd
-    Update(msg tea.Msg) (Widget, tea.Cmd)
-    View() string
-
-    // Size management
-    SetSize(width, height int)
-    GetDimensions() (width, height int)
-
-    // Focus management
-    Focus()
-    Blur()
-    IsFocused() bool
-}
-```
-
-### Logging
-
-The dashboard uses structured logging with Zap:
-
-- Debug output goes to `logs/dashboard-debug.log`
-- Log rotation is configured
-- Test logs are automatically cleaned up
-- Log levels: debug, info, warn, error
 
 ## Contributing
 
