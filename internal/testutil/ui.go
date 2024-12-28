@@ -37,9 +37,36 @@ func (u *UITest) WithSize(width, height int) *UITest {
 func (u *UITest) Init() *UITest {
 	cmd := u.model.Init()
 	if cmd != nil {
-		u.Cmds = []tea.Cmd{cmd}
+		u.executeCmd(cmd)
 	}
 	return u
+}
+
+// executeCmd executes a command and handles any resulting messages
+func (u *UITest) executeCmd(cmd tea.Cmd) {
+	if cmd == nil {
+		return
+	}
+
+	// Execute the command and get the message
+	msg := cmd()
+	if msg == nil {
+		u.Cmds = append(u.Cmds, cmd)
+		return
+	}
+
+	// Handle regular message
+	var nextCmd tea.Cmd
+	u.model, nextCmd = u.model.Update(msg)
+	if nextCmd != nil {
+		if msg := nextCmd(); msg != nil {
+			if _, ok := msg.(tea.QuitMsg); ok {
+				u.Cmds = append(u.Cmds, nextCmd)
+				return
+			}
+		}
+		u.executeCmd(nextCmd)
+	}
 }
 
 // Send sends a message to the model and captures the result
@@ -47,7 +74,13 @@ func (u *UITest) Send(msg tea.Msg) *UITest {
 	var cmd tea.Cmd
 	u.model, cmd = u.model.Update(msg)
 	if cmd != nil {
-		u.Cmds = append(u.Cmds, cmd)
+		if msg := cmd(); msg != nil {
+			if _, ok := msg.(tea.QuitMsg); ok {
+				u.Cmds = append(u.Cmds, cmd)
+				return u
+			}
+		}
+		u.executeCmd(cmd)
 	}
 	return u
 }
@@ -62,11 +95,13 @@ func (u *UITest) SendWindowSize() *UITest {
 
 // SendKey sends a key press message
 func (u *UITest) SendKey(key string) *UITest {
+	u.Cmds = nil // Clear previous commands
 	return u.Send(tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune(key)})
 }
 
 // SendKeyType sends a special key type message
 func (u *UITest) SendKeyType(keyType tea.KeyType) *UITest {
+	u.Cmds = nil // Clear previous commands
 	return u.Send(tea.KeyMsg{Type: keyType})
 }
 
@@ -85,6 +120,7 @@ func (u *UITest) AssertViewContains(expected string) *UITest {
 // AssertNoCommands asserts that no commands are pending
 func (u *UITest) AssertNoCommands() *UITest {
 	assert.Empty(u.t, u.Cmds)
+	u.Cmds = nil // Clear commands after assertion
 	return u
 }
 

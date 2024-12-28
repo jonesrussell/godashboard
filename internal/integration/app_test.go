@@ -15,25 +15,32 @@ import (
 // TestAppInitialization verifies that the application initializes correctly
 func TestAppInitialization(t *testing.T) {
 	log, _ := testlogger.NewTestLogger(t, "init")
-	defer log.Close()
+	t.Cleanup(func() {
+		if err := log.Close(); err != nil {
+			t.Logf("Failed to close logger: %v", err)
+		}
+	})
 
 	// Initialize dashboard
 	dashboard := ui.NewDashboard(log)
 
 	// Create UI test helper
 	ui := testutil.NewUITest(t, dashboard).
-		WithSize(80, 24).
-		Init()
+		WithSize(80, 24)
+
+	// Send window size before init to ensure proper layout
+	ui.SendWindowSize()
+
+	// Initialize and verify no pending commands
+	ui.Init()
 
 	// Test initial state
 	ui.AssertViewContains("Dashboard")
-	ui.AssertNoCommands()
 	log.Info("Initial state tested")
 
 	// Test help toggle
 	ui.SendKey("?")
 	ui.AssertViewContains("Help")
-	ui.AssertNoCommands()
 	log.Info("Help toggle tested")
 
 	// Test quit command

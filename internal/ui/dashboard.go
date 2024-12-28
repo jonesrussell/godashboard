@@ -196,8 +196,8 @@ func (d *Dashboard) View() string {
 
 	// Add main content area
 	if d.showHelp {
-		contentStyle := d.styleCache.GetContentStyle(d.width-4, d.height-6)
-		b.WriteString(contentStyle.Render("Welcome to the dashboard!"))
+		helpStyle := d.styleCache.GetContentStyle(d.width-4, d.height-6)
+		b.WriteString(helpStyle.Render("Help\n\n" + d.help.View(d.keys)))
 	} else {
 		if d.debug {
 			d.logger.Debug("Content area",
@@ -208,12 +208,8 @@ func (d *Dashboard) View() string {
 	}
 	b.WriteByte('\n')
 
-	// Add footer with help
-	if d.showHelp {
-		b.WriteString(d.help.View(d.keys))
-	} else {
-		b.WriteString(d.footerContent)
-	}
+	// Add footer
+	b.WriteString(d.footerContent)
 
 	if d.debug {
 		d.logger.Debug("=== End Debug ===")
