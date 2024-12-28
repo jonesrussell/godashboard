@@ -8,6 +8,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/logger/types"
+	"github.com/jonesrussell/dashboard/internal/shutdown"
 	"github.com/jonesrussell/dashboard/internal/ui"
 )
 
@@ -27,15 +28,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Initialize shutdown handler
+	shutdownHandler := shutdown.New(log)
+	shutdownHandler.HandleSignals()
+	// Ensure cleanup on exit
+	defer shutdownHandler.Close()
+
 	// Create and run the dashboard
 	dash := ui.NewDashboard(log)
 	p := tea.NewProgram(dash,
-		tea.WithAltScreen(),       // Use alternate screen buffer
-		tea.WithMouseCellMotion(), // Enable mouse support
+		tea.WithAltScreen(),                        // Use alternate screen buffer
+		tea.WithMouseCellMotion(),                  // Enable mouse support
+		tea.WithContext(shutdownHandler.Context()), // Use shutdown context
 	)
 
 	if _, err := p.Run(); err != nil {
-		fmt.Printf("Error running dashboard: %v\n", err)
+		log.Error("Error running dashboard", logger.NewField("error", err))
 		os.Exit(1)
 	}
+
+	log.Info("Dashboard shutdown complete")
 }
