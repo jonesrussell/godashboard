@@ -10,10 +10,18 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
-	"github.com/jonesrussell/dashboard/internal/ui/container"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
 	"github.com/jonesrussell/dashboard/internal/ui/widgets/sysinfo"
 	"github.com/jonesrussell/dashboard/internal/ui/widgets/tasks"
+)
+
+// Dashboard messages
+type dashboardMsg int
+
+const (
+	msgNone dashboardMsg = iota
+	msgToggleHelp
+	msgToggleDebug
 )
 
 // KeyMap defines the keybindings for the dashboard
@@ -37,7 +45,7 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-// DefaultKeyMap defines the default keyboard shortcuts for the dashboard
+// DefaultKeyMap defines the default keyboard shortcuts
 var DefaultKeyMap = KeyMap{
 	Quit: key.NewBinding(
 		key.WithKeys("q", "ctrl+c"),
@@ -67,88 +75,36 @@ type Dashboard struct {
 	debug    bool
 	logger   logger.Logger
 
-	// Cached styles
-	headerStyle lipgloss.Style
-	footerStyle lipgloss.Style
-	styleCache  *styles.StyleCache
-
-	// Content cache
-	headerContent string
-	footerContent string
-	contentCache  map[string]string
-	needsRefresh  bool
-
-	// Widget container
-	container *container.Container
-}
-
-// EnableDebug enables debug output
-func (d *Dashboard) EnableDebug() {
-	d.debug = true
-	d.container.EnableDebug()
-	if widget := d.container.FocusedWidget(); widget != nil {
-		if debuggable, ok := widget.(interface{ EnableDebug() }); ok {
-			debuggable.EnableDebug()
-		}
-	}
+	// Widgets
+	sysInfo components.Widget
+	tasks   components.Widget
 }
 
 // NewDashboard creates a new dashboard instance
 func NewDashboard(log logger.Logger) *Dashboard {
-	d := &Dashboard{
+	return &Dashboard{
 		keys:     DefaultKeyMap,
 		help:     help.New(),
 		showHelp: false,
 		debug:    false,
 		logger:   log,
-
-		// Initialize cached styles
-		headerStyle: styles.HeaderStyle,
-		footerStyle: styles.FooterStyle,
-		styleCache:  styles.NewStyleCache(),
-
-		// Initialize content cache
-		contentCache: make(map[string]string),
-		needsRefresh: true,
-
-		// Initialize widget container with 2x2 grid
-		container: container.New(2, 2, log),
+		sysInfo:  sysinfo.New(),
+		tasks:    tasks.New(),
 	}
-
-	// Pre-render static content
-	d.headerContent = d.headerStyle.Render("Dashboard")
-	d.footerContent = d.footerStyle.Render("Press ? for help")
-
-	// Add system info widget
-	sysInfo := sysinfo.New()
-	d.container.AddWidgetWithConfig(sysInfo, container.GridConfig{
-		Row:      0,
-		Col:      0,
-		RowSpan:  1,
-		ColSpan:  1,
-		MinWidth: 40,
-	})
-
-	// Add tasks widget
-	tasks := tasks.New()
-	d.container.AddWidgetWithConfig(tasks, container.GridConfig{
-		Row:      0,
-		Col:      1,
-		RowSpan:  2,
-		ColSpan:  1,
-		MinWidth: 40,
-	})
-
-	return d
 }
 
 // Init implements tea.Model
 func (d *Dashboard) Init() tea.Cmd {
-	return d.container.Init()
+	return tea.Batch(
+		d.sysInfo.Init(),
+		d.tasks.Init(),
+	)
 }
 
 // Update implements tea.Model
 func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmds []tea.Cmd
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch {
@@ -156,25 +112,37 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return d, tea.Quit
 		case key.Matches(msg, d.keys.Help):
 			d.showHelp = !d.showHelp
-			d.needsRefresh = true
 			return d, nil
 		case msg.String() == "d":
 			d.debug = !d.debug
-			d.needsRefresh = true
 			return d, nil
-		case key.Matches(msg, d.keys.Tab):
-			// Let container handle tab navigation
-			return d.container.Update(msg)
 		}
+
 	case tea.WindowSizeMsg:
 		d.width = msg.Width
 		d.height = msg.Height
-		d.needsRefresh = true
-		return d, nil
+
+		// Calculate widget sizes
+		contentWidth := d.width - 4
+		contentHeight := d.height - 6
+		halfWidth := contentWidth / 2
+
+		// Update widget sizes
+		d.sysInfo.SetSize(halfWidth-1, contentHeight)
+		d.tasks.SetSize(halfWidth-1, contentHeight)
 	}
 
-	// Forward other messages to container
-	return d.container.Update(msg)
+	// Update widgets
+	if sysInfo, cmd := d.sysInfo.Update(msg); cmd != nil {
+		cmds = append(cmds, cmd)
+		d.sysInfo = sysInfo.(components.Widget)
+	}
+	if tasks, cmd := d.tasks.Update(msg); cmd != nil {
+		cmds = append(cmds, cmd)
+		d.tasks = tasks.(components.Widget)
+	}
+
+	return d, tea.Batch(cmds...)
 }
 
 // View implements tea.Model
@@ -186,31 +154,29 @@ func (d *Dashboard) View() string {
 	if d.debug {
 		header += " Debug: ON"
 	}
-	b.WriteString(d.headerStyle.Render(header))
+	b.WriteString(styles.Header.Render(header))
 	b.WriteRune('\n')
 
-	// Main content area with padding
+	// Main content area
 	contentWidth := d.width - 4
 	contentHeight := d.height - 6
 
 	if d.showHelp {
 		helpContent := "Help\n\n" + d.help.View(d.keys)
-		helpStyle := d.styleCache.GetContentStyle(contentWidth, contentHeight)
-		b.WriteString(helpStyle.Render(helpContent))
+		b.WriteString(styles.WithSize(styles.Base, contentWidth, contentHeight).Render(helpContent))
 	} else {
-		containerStyle := d.styleCache.GetContentStyle(contentWidth, contentHeight)
-		b.WriteString(containerStyle.Render(d.container.View()))
+		// Layout widgets side by side
+		content := lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			d.sysInfo.View(),
+			d.tasks.View(),
+		)
+		b.WriteString(content)
 	}
 	b.WriteRune('\n')
 
 	// Footer
-	b.WriteString(d.footerStyle.Render("Press ? for help"))
+	b.WriteString(styles.Footer.Render("Press ? for help"))
 
 	return b.String()
-}
-
-// AddWidget adds a widget to the container
-func (d *Dashboard) AddWidget(w components.Widget) {
-	d.container.AddWidget(w)
-	d.needsRefresh = true
 }

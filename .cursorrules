@@ -20,6 +20,21 @@
 - Uses Wire for dependency injection
 - Uses Zap for structured logging
 
+## Lifecycle Management
+- Use Bubbletea's built-in lifecycle management
+  - Signal handling (SIGINT, SIGTERM)
+  - Key event handling (q, ctrl+c)
+  - Terminal cleanup
+- No custom signal handlers needed
+  - Bubbletea handles graceful shutdown
+  - Terminal restoration on exit
+  - Event propagation to components
+- Cleanup responsibilities:
+  - Logger: Flush on exit
+  - UI: Handled by Bubbletea
+  - Terminal: Restored by Bubbletea
+  - Components: Use Init/Update for setup/teardown
+
 ## Code Style
 - Follow standard Go conventions
 - Use gofmt for formatting

@@ -15,36 +15,25 @@ import (
 	"github.com/shirou/gopsutil/v3/mem"
 )
 
-// Widget displays system information like CPU, memory, and disk usage
+// Widget represents the system information widget
 type Widget struct {
-	width  int
-	height int
-	style  lipgloss.Style
-	debug  bool
-
-	// System info
+	width       int
+	height      int
+	focused     bool
 	cpuUsage    float64
 	memoryUsage float64
 	diskUsage   float64
-
-	// Update ticker
-	updateInterval time.Duration
 }
 
 // New creates a new system information widget
 func New() *Widget {
-	return &Widget{
-		style:          styles.ContentStyle,
-		updateInterval: 2 * time.Second,
-	}
+	w := &Widget{}
+	return w
 }
 
-// Init implements tea.Model
+// Init implements components.Widget
 func (w *Widget) Init() tea.Cmd {
-	return tea.Batch(
-		w.updateSystemInfo,
-		w.tick(),
-	)
+	return w.tick()
 }
 
 // Update implements components.Widget
@@ -55,30 +44,22 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 		w.memoryUsage = msg.memory
 		w.diskUsage = msg.disk
 		return w, w.tick()
-
-	case tea.WindowSizeMsg:
-		w.SetSize(msg.Width, msg.Height)
 	}
-
 	return w, nil
 }
 
 // View implements components.Widget
 func (w *Widget) View() string {
-	if w.debug {
-		fmt.Println("=== SysInfo Widget Debug ===")
-		fmt.Printf("Size: %dx%d\n", w.width, w.height)
+	style := styles.Base
+	if w.focused {
+		style = styles.Focused
 	}
 
 	var b strings.Builder
 	b.Grow(w.width * w.height)
 
 	// Title
-	title := lipgloss.NewStyle().
-		Bold(true).
-		Foreground(styles.Primary).
-		Render("System Information")
-	b.WriteString(title)
+	b.WriteString(styles.Title.Render("System Information"))
 	b.WriteString("\n\n")
 
 	// Calculate bar width (minimum 10 characters)
@@ -87,49 +68,71 @@ func (w *Widget) View() string {
 		barWidth = 10
 	}
 
-	if w.debug {
-		fmt.Printf("Progress bars: width=%d\n", barWidth)
-		fmt.Printf("Values: CPU=%.1f%%, Memory=%.1f%%, Disk=%.1f%%\n",
-			w.cpuUsage, w.memoryUsage, w.diskUsage)
-	}
-
 	// Format system info with bars
 	cpuBar := createUsageBar(w.cpuUsage, barWidth)
 	memBar := createUsageBar(w.memoryUsage, barWidth)
 	diskBar := createUsageBar(w.diskUsage, barWidth)
 
 	// CPU
-	b.WriteString(lipgloss.NewStyle().Bold(true).Render("CPU"))
+	b.WriteString(styles.Title.Render("CPU"))
 	b.WriteString("\n")
 	b.WriteString(fmt.Sprintf("%.1f%% ", w.cpuUsage))
 	b.WriteString(cpuBar)
 	b.WriteString("\n\n")
 
 	// Memory
-	b.WriteString(lipgloss.NewStyle().Bold(true).Render("Memory"))
+	b.WriteString(styles.Title.Render("Memory"))
 	b.WriteString("\n")
 	b.WriteString(fmt.Sprintf("%.1f%% ", w.memoryUsage))
 	b.WriteString(memBar)
 	b.WriteString("\n\n")
 
 	// Disk
-	b.WriteString(lipgloss.NewStyle().Bold(true).Render("Disk"))
+	b.WriteString(styles.Title.Render("Disk"))
 	b.WriteString("\n")
 	b.WriteString(fmt.Sprintf("%.1f%% ", w.diskUsage))
 	b.WriteString(diskBar)
 
-	rendered := w.style.Width(w.width).Height(w.height).Render(b.String())
-	if w.debug {
-		fmt.Printf("Rendered content length: %d\n", len(rendered))
-		fmt.Println("=== End SysInfo Debug ===")
-	}
-	return rendered
+	return style.Width(w.width).Height(w.height).Render(b.String())
 }
 
 // SetSize implements components.Widget
 func (w *Widget) SetSize(width, height int) {
 	w.width = width
 	w.height = height
+}
+
+// Focus implements components.Focusable
+func (w *Widget) Focus() {
+	w.focused = true
+}
+
+// Blur implements components.Focusable
+func (w *Widget) Blur() {
+	w.focused = false
+}
+
+// createUsageBar creates a progress bar for the given percentage
+func createUsageBar(percent float64, width int) string {
+	// Ensure valid percentage
+	if percent < 0 {
+		percent = 0
+	} else if percent > 100 {
+		percent = 100
+	}
+
+	// Calculate filled and empty portions
+	filled := int(float64(width) * percent / 100)
+	if filled > width {
+		filled = width
+	}
+	empty := width - filled
+
+	// Create the bar with colors
+	bar := lipgloss.NewStyle().Foreground(styles.Primary).Render(strings.Repeat("█", filled)) +
+		lipgloss.NewStyle().Foreground(styles.Subtle).Render(strings.Repeat("░", empty))
+
+	return bar
 }
 
 // systemInfoMsg carries system information updates
@@ -141,7 +144,7 @@ type systemInfoMsg struct {
 
 // tick returns a command that waits for the update interval
 func (w *Widget) tick() tea.Cmd {
-	return tea.Tick(w.updateInterval, func(time.Time) tea.Msg {
+	return tea.Tick(2*time.Second, func(time.Time) tea.Msg {
 		return updateSystemInfoMsg{}
 	})
 }
@@ -176,37 +179,4 @@ func (w *Widget) updateSystemInfo() tea.Msg {
 		memory: memPercent,
 		disk:   diskPercent,
 	}
-}
-
-// createUsageBar creates a visual bar representing a percentage
-func createUsageBar(percent float64, width int) string {
-	// Ensure valid width
-	if width < 1 {
-		width = 1
-	}
-
-	// Ensure valid percentage
-	if percent < 0 {
-		percent = 0
-	} else if percent > 100 {
-		percent = 100
-	}
-
-	// Calculate filled and empty portions
-	filled := int(float64(width) * percent / 100)
-	if filled > width {
-		filled = width
-	}
-	empty := width - filled
-
-	// Create the bar with colors
-	bar := lipgloss.NewStyle().Foreground(styles.Primary).Render(strings.Repeat("█", filled)) +
-		lipgloss.NewStyle().Foreground(styles.Subtle).Render(strings.Repeat("░", empty))
-
-	return bar
-}
-
-// EnableDebug enables debug output
-func (w *Widget) EnableDebug() {
-	w.debug = true
 }

@@ -45,9 +45,7 @@ type Widget struct {
 	selected int
 	width    int
 	height   int
-	style    lipgloss.Style
 	focused  bool
-	debug    bool
 }
 
 // New creates a new tasks widget
@@ -58,7 +56,6 @@ func New() *Widget {
 			NewTodo("Add more widgets"),
 			NewTodo("Write tests"),
 		},
-		style: styles.ContentStyle,
 	}
 }
 
@@ -71,6 +68,9 @@ func (w *Widget) Init() tea.Cmd {
 func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		if !w.focused {
+			return w, nil
+		}
 		switch msg.String() {
 		case "up", "k":
 			if w.selected > 0 {
@@ -91,26 +91,25 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 
 // View implements components.Widget
 func (w *Widget) View() string {
-	if w.width == 0 || w.height == 0 {
-		return ""
+	style := styles.Base
+	if w.focused {
+		style = styles.Focused
 	}
 
 	var b strings.Builder
+	b.Grow(w.width * w.height)
 
 	// Title
-	title := "Tasks"
-	if w.focused {
-		title = fmt.Sprintf("> %s", title)
-	}
-	b.WriteString(lipgloss.NewStyle().Bold(true).Render(title))
+	b.WriteString(styles.Title.Render("Tasks"))
+	b.WriteRune('\n')
 	b.WriteRune('\n')
 
 	// Tasks
 	for i, todo := range w.todos {
 		// Task style
-		style := lipgloss.NewStyle()
+		taskStyle := lipgloss.NewStyle()
 		if i == w.selected && w.focused {
-			style = style.Background(styles.Primary).Foreground(lipgloss.Color("#ffffff"))
+			taskStyle = styles.Selected
 		}
 
 		// Task status
@@ -121,11 +120,11 @@ func (w *Widget) View() string {
 
 		// Format task line
 		taskLine := fmt.Sprintf("%s %s", status, todo.Content)
-		b.WriteString(style.Render(taskLine))
+		b.WriteString(taskStyle.Render(taskLine))
 		b.WriteRune('\n')
 	}
 
-	return w.style.Render(b.String())
+	return style.Width(w.width).Height(w.height).Render(b.String())
 }
 
 // Focus implements components.Focusable
@@ -138,14 +137,8 @@ func (w *Widget) Blur() {
 	w.focused = false
 }
 
-// EnableDebug enables debug output
-func (w *Widget) EnableDebug() {
-	w.debug = true
-}
-
 // SetSize implements components.Widget
 func (w *Widget) SetSize(width, height int) {
 	w.width = width
 	w.height = height
-	w.style = w.style.Copy().Width(width).Height(height)
 }
