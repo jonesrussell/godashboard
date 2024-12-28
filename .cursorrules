@@ -75,39 +75,124 @@
 
 ## UI Components
 - Use Bubbletea for terminal UI
+  - Model-View-Update pattern
+  - Message-based state updates
+  - Built-in lifecycle management
 - Use Lipgloss for styling
-  - Cache styles for performance
-  - Use consistent color scheme
-  - Support light/dark themes
+  - Pre-defined styles
+  - Consistent color scheme
+  - Composable layouts
 - Widget System
-  - Grid-based layout
-  - Focus management
+  - Horizontal/Vertical layout using Lipgloss
+  - Simple widget composition
+  - Pre-defined styles
+  - Focus-based styling
   - Keyboard navigation
   - Minimum size constraints
-  - Content caching
-  - Style caching
+
+## Component Design
+- Follow Single Responsibility Principle (SRP)
+  - Each widget handles one specific concern
+  - Separate styling from content
+  - Split complex widgets into subcomponents
+- Don't Repeat Yourself (DRY)
+  - BaseWidget responsibilities:
+    - Dimension management (width/height)
+    - Focus state management
+    - Style selection based on state
+    - Default command handling
+  - Share styles through styles package
+  - Reuse interface definitions
+- Interface Segregation
+  - Widget: Core component interface (Init/Update/View)
+  - Focusable: Focus management (Focus/Blur/IsFocused)
+  - Sizable: Size management (SetSize/GetDimensions)
+  - Keep interfaces small and focused
+- Composition Over Inheritance
+  - Embed BaseWidget in components
+  - Use interfaces for behavior contracts
+  - Favor composition for reuse
+  - Keep components loosely coupled
+
+## Widget Implementation
+- BaseWidget provides:
+  - Size management (width/height)
+  - Focus handling (focus/blur)
+  - Style management (based on state)
+  - Default implementations (Init/Update)
+- Concrete Widgets:
+  - Implement specific View logic
+  - Handle domain-specific state
+  - Process relevant messages
+  - Define custom commands
+- Message Handling:
+  - Use tea.Msg for state updates
+  - Handle only relevant messages
+  - Return appropriate commands
+  - Maintain widget state
+- Testing Approach:
+  - Unit test widget behavior
+  - Test state transitions
+  - Verify view rendering
+  - Check message handling
+  - Benchmark performance
+
+## Style Management
+- Pre-defined styles in styles package
+  - Base styles (content, borders)
+  - State-based styles (focused, selected)
+  - Text styles (headers, titles)
+  - Color scheme constants
+- Style Composition
+  - Use Lipgloss style composition
+  - Apply styles based on state
+  - Consistent margins/padding
+  - Flexible dimensions
 
 ## Performance
-- Cache rendered content
-- Cache styles
-- Pre-render static content
-- Minimize allocations
-- Use string builders
-- Implement dirty region tracking
+- Minimize state changes
+  - Update only when needed
+  - Avoid unnecessary renders
+  - Use efficient data structures
+- Optimize string handling
+  - Pre-size string builders
+  - Minimize concatenations
+  - Reuse string buffers
+- Pre-define styles
+  - No runtime style creation
+  - Share common styles
+  - Minimize style copies
 - Target metrics:
   - View rendering < 1ms
   - Memory allocations < 1KB/op
   - CPU usage < 5%
 
 ## Testing
-- Use table-driven tests
-- Mock external dependencies
-- Test both success and error paths
-- Add benchmark tests
-- Coverage > 80%
-- Test all UI components
-- Test layout system
-- Test focus management
+- Test Categories:
+  - Unit Tests:
+    - Widget behavior
+    - State transitions
+    - Message handling
+    - Style application
+  - Integration Tests:
+    - Widget interactions
+    - Focus management
+    - Layout behavior
+    - Event propagation
+  - Benchmark Tests:
+    - View rendering
+    - Update performance
+    - Memory allocations
+    - Style operations
+- Test Coverage:
+  - Core logic > 80%
+  - UI components > 70%
+  - Integration paths > 60%
+- Test Utilities:
+  - Mock widgets
+  - Test loggers
+  - Benchmark helpers
+  - Assertion helpers
 
 ## Documentation
 - Document all exported symbols
