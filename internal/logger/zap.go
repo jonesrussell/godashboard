@@ -4,14 +4,25 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
+// contextKey is a custom type for context keys to avoid collisions
+type contextKey string
+
+const (
+	// requestIDKey is the context key for request IDs
+	requestIDKey = contextKey("request_id")
+)
+
 type zapLogger struct {
-	logger *zap.Logger
+	logger    *zap.Logger
+	writer    *lumberjack.Logger
+	sync.Once // For safe cleanup
 }
 
 // Config holds the configuration for the logger
@@ -35,13 +46,13 @@ func NewZapLogger(cfg Config) (Logger, error) {
 	}
 
 	// Configure log rotation
-	sink := zapcore.AddSync(&lumberjack.Logger{
+	writer := &lumberjack.Logger{
 		Filename:   cfg.OutputPath,
 		MaxSize:    cfg.MaxSize,
 		MaxBackups: cfg.MaxBackups,
 		MaxAge:     cfg.MaxAge,
 		Compress:   cfg.Compress,
-	})
+	}
 
 	// Configure encoder
 	encoderConfig := zap.NewProductionEncoderConfig()
@@ -52,7 +63,7 @@ func NewZapLogger(cfg Config) (Logger, error) {
 	// Create core
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderConfig),
-		sink,
+		zapcore.AddSync(writer),
 		parseLevel(cfg.Level),
 	)
 
@@ -66,7 +77,10 @@ func NewZapLogger(cfg Config) (Logger, error) {
 		logger = logger.WithOptions(zap.Development())
 	}
 
-	return &zapLogger{logger: logger}, nil
+	return &zapLogger{
+		logger: logger,
+		writer: writer,
+	}, nil
 }
 
 func (l *zapLogger) Debug(msg string, fields ...Field) {
@@ -92,15 +106,32 @@ func (l *zapLogger) Fatal(msg string, fields ...Field) {
 func (l *zapLogger) WithFields(fields ...Field) Logger {
 	return &zapLogger{
 		logger: l.logger.With(convertFields(fields...)...),
+		writer: l.writer,
 	}
 }
 
 func (l *zapLogger) WithContext(ctx context.Context) Logger {
 	// Extract request ID from context if available
-	if reqID, ok := ctx.Value("request_id").(string); ok {
+	if reqID, ok := ctx.Value(requestIDKey).(string); ok {
 		return l.WithFields(NewField("request_id", reqID))
 	}
 	return l
+}
+
+// Close ensures all log files are properly closed
+func (l *zapLogger) Close() error {
+	var err error
+	l.Do(func() {
+		// First sync the zap logger
+		if err = l.logger.Sync(); err != nil {
+			return
+		}
+		// Then close the underlying writer
+		if l.writer != nil {
+			err = l.writer.Close()
+		}
+	})
+	return err
 }
 
 // Helper functions

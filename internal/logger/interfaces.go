@@ -13,6 +13,7 @@ type Logger interface {
 
 	WithFields(fields ...Field) Logger
 	WithContext(ctx context.Context) Logger
+	Close() error
 }
 
 // Field represents a logging field key-value pair
