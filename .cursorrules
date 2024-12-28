@@ -1,0 +1,32 @@
+# Go Dashboard Project
+
+## Project Context
+- Terminal UI dashboard using Bubbletea and Lipgloss
+- Integrates with Godo for todo management
+- Follows standard Go project layout
+
+## Code Style
+- Follow standard Go conventions
+- Use gofmt for formatting
+- Apply golangci-lint rules
+
+## File Patterns
+- *.go: gofmt
+- go.mod: none
+- *.md: prettier
+
+## Linting
+- golangci-lint
+- staticcheck
+- errcheck
+- gosimple
+
+## Testing
+- Use table-driven tests
+- Require test coverage > 80%
+- Mock external dependencies
+
+## Documentation
+- All exported functions must be documented
+- Include examples in doc comments
+- Keep line length < 100 chars 
