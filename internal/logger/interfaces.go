@@ -5,11 +5,11 @@ import (
 	"github.com/jonesrussell/dashboard/internal/logger/types"
 )
 
-// Re-export types for backward compatibility
-type (
-	Field  = types.Field
-	Logger = types.Logger
-)
+// Field represents a key-value pair for structured logging
+type Field = types.Field
+
+// Logger represents the interface for logging operations
+type Logger = types.Logger
 
 // NewField creates a new log field
 func NewField(key string, value interface{}) Field {

@@ -192,14 +192,3 @@ func (w *Widget) deleteTask(id string) tea.Cmd {
 		return w.fetchTasks()
 	}
 }
-
-func (w *Widget) createTask() tea.Msg {
-	input := TaskInput{
-		Title: "New Task",
-	}
-	_, err := w.client.CreateTask(input)
-	if err != nil {
-		return errorMsg(err)
-	}
-	return w.fetchTasks()
-}

@@ -8,6 +8,7 @@ import (
 	"github.com/jonesrussell/dashboard/internal/logger/types"
 	"github.com/jonesrussell/dashboard/internal/testutil/testlogger"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestDefaultConfig(t *testing.T) {
@@ -28,14 +29,18 @@ func TestProvideLogger(t *testing.T) {
 	logger, err := ProvideLogger(cfg)
 	assert.NoError(t, err)
 	assert.NotNil(t, logger)
-	defer logger.Close()
+	defer func() {
+		require.NoError(t, logger.Close())
+	}()
 
 	// Test logging with provided logger
 	logger.Info("test message", types.NewField("test", true))
 
 	// Test with test logger
 	testLogger, _ := testlogger.NewTestLogger(t, "provider-test")
-	defer testLogger.Close()
+	defer func() {
+		require.NoError(t, testLogger.Close())
+	}()
 
 	// Test logging with test logger
 	testLogger.Info("test message", types.NewField("test", true))
@@ -48,4 +53,16 @@ func TestProvideLogger(t *testing.T) {
 	logger, err = ProvideLogger(invalidCfg)
 	assert.Error(t, err)
 	assert.Nil(t, logger)
+}
+
+func TestNew(t *testing.T) {
+	logger, err := New(types.Config{
+		Level:      "debug",
+		OutputPath: filepath.Join(t.TempDir(), "test.log"),
+	})
+	require.NoError(t, err)
+	require.NotNil(t, logger)
+	defer func() {
+		require.NoError(t, logger.Close())
+	}()
 }

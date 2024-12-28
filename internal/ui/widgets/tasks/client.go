@@ -84,7 +84,11 @@ func (c *Client) ListTasks() ([]Task, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tasks: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "error closing response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
@@ -113,7 +117,11 @@ func (c *Client) CreateTask(input TaskInput) (*Task, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to create task: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "error closing response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusCreated {
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
@@ -148,7 +156,11 @@ func (c *Client) UpdateTask(id string, input TaskInput) (*Task, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to update task: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "error closing response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
@@ -167,7 +179,7 @@ func (c *Client) DeleteTask(id string) error {
 	req, err := http.NewRequest(
 		http.MethodDelete,
 		fmt.Sprintf("%s/api/v1/tasks/%s", c.baseURL, id),
-		nil,
+		http.NoBody,
 	)
 	if err != nil {
 		return fmt.Errorf("failed to create request: %w", err)
@@ -177,7 +189,11 @@ func (c *Client) DeleteTask(id string) error {
 	if err != nil {
 		return fmt.Errorf("failed to delete task: %w", err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		if err := resp.Body.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "error closing response body: %v\n", err)
+		}
+	}()
 
 	if resp.StatusCode != http.StatusNoContent {
 		return fmt.Errorf("unexpected status: %s", resp.Status)

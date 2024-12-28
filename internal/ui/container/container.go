@@ -89,7 +89,7 @@ func (c *Container) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 	if c.selected >= 0 && c.selected < len(c.entries) {
 		if widget, cmd := c.entries[c.selected].Widget.Update(msg); cmd != nil {
 			cmds = append(cmds, cmd)
-			c.entries[c.selected].Widget = widget.(components.Widget)
+			c.entries[c.selected].Widget = widget
 		}
 	}
 

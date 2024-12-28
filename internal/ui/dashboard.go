@@ -128,9 +128,9 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		cmds = append(cmds, cmd)
 		d.sysInfo = sysInfo
 	}
-	if tasks, cmd := d.tasks.Update(msg); cmd != nil {
+	if tasksWidget, cmd := d.tasks.Update(msg); cmd != nil {
 		cmds = append(cmds, cmd)
-		d.tasks = tasks
+		d.tasks = tasksWidget
 	}
 
 	return d, tea.Batch(cmds...)

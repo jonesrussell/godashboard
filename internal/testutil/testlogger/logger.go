@@ -53,7 +53,7 @@ func DefaultConfig(name string, tb testing.TB) Config {
 }
 
 // NewTestLogger creates a new logger for testing
-func NewTestLogger(tb testing.TB, name string) (types.Logger, string) {
+func NewTestLogger(tb testing.TB, name string) (logger types.Logger, logPath string) {
 	cfg := DefaultConfig(name, tb)
 
 	// Create log directory if needed
@@ -67,7 +67,7 @@ func NewTestLogger(tb testing.TB, name string) (types.Logger, string) {
 		tb.Fatal(err)
 	}
 
-	logger := &testLogger{
+	logger = &testLogger{
 		file: file,
 	}
 

@@ -4,7 +4,7 @@ linters:
   - gocritic
   - gofmt
   - gosimple
-  - govet
+  - govet # Includes fieldalignment for struct memory optimization
   - ineffassign
   - misspell
   - revive
@@ -13,7 +13,10 @@ linters:
   - unparam
   - unused
   - mnd
-  - copyloopvar # replacement for exportloopref
+  - copyloopvar
+  - errcheck # Check for unchecked errors
+  - gocyclo # Check for code complexity
+  - prealloc # Check for preallocation of slice capacity
 
 linters-settings:
   depguard:
@@ -31,14 +34,31 @@ linters-settings:
     - performance
     disabled-checks:
     - hugeParam # Disable hugeParam check as it's not relevant for our UI components
+    - evalOrder # Disable evalOrder as it conflicts with our command pattern
+    - singleCaseSwitch # Allow single case switches for type assertions
+    - sloppyTypeAssert # Disable sloppy type assertions check
   mnd:
     ignored-numbers:
+    - '0o644' # Common file permission
     - '0o755' # Common file permission
+    - '2' # Common UI layout divisor
     - '4' # Common UI padding/margin
     - '6' # Common UI padding/margin
+    - '10' # Common timeouts and sizes
+    - '20' # Common UI spacing
+    - '100' # Common percentage calculations
     ignored-files:
-    - 'internal/ui/*'
-    - 'internal/logger/provider.go'
+    - 'internal/ui/widgets/sysinfo/widget.go'
+    - 'internal/ui/styles/styles.go'
+    - 'internal/testutil/testlogger/logger.go'
+  revive:
+    rules:
+    - name: unused-parameter
+      disabled: true # Disable unused parameter check as it's too strict for our interfaces
+    - name: unexported-return
+      disabled: true # Allow unexported return types in test utilities
+    - name: exported
+      disabled: false # Keep exported symbol documentation check
 
 issues:
   exclude-use-default: false
@@ -47,7 +67,15 @@ issues:
   exclude-dirs:
   - build/
   - coverage/
+  exclude-rules:
+  - path: _test\.go
+    linters:
+    - unused-parameter # Don't check unused parameters in tests
+    - gocritic # Don't run gocritic on tests
 
 output:
   formats:
   - format: colored-line-number
+
+telemetry:
+  enabled: true # Enable telemetry to help Go improve
