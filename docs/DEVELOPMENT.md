@@ -77,6 +77,13 @@ func (w *Widget) View() string { ... }
 
 ### Best Practices
 
+#### Time Handling
+- Always check for both nil and zero time values
+- Use pointer to time.Time for optional timestamps
+- Validate time values before using them
+- Use time.IsZero() for zero time checks
+- Document time-related edge cases
+
 #### State Management
 - Keep widget state minimal
 - Use proper types for state

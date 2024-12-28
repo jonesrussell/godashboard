@@ -1,14 +1,18 @@
 # TODO List
 
 ## Current Sprint
+- [x] Fix Task Widget Issues
+  - [x] Fix task completion status check
+  - [x] Add tests for completion status edge cases
+  - [x] Update documentation
 - [ ] Improve Test Coverage
   - [ ] Dashboard Tests
     - [ ] Add keyboard navigation tests (Tab cycling, Enter activation)
     - [ ] Add focus management tests
     - [ ] Add debug mode toggle tests
     - [ ] Add error handling scenarios
-  - [ ] Widget Tests
-    - [ ] Add focus state management tests
+  - [x] Widget Tests
+    - [x] Add task completion status tests
     - [ ] Add widget-to-widget interaction tests
     - [ ] Add state persistence tests
   - [ ] Integration Tests

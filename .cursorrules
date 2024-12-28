@@ -9,6 +9,10 @@ code_style:
   - document_all_exported_symbols: true
   - widget_interface_compliance: true
   - focus_management_patterns: true
+  - time_handling:
+    - check_zero_time_values: true
+    - validate_time_pointers: true
+    - use_time_comparison_helpers: true
 
 lifecycle_management:
 - description: "Use Bubbletea's built-in lifecycle management."

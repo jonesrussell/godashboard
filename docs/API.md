@@ -57,6 +57,15 @@ type Task struct {
 }
 ```
 
+### Time Handling
+- `CompletedAt` is a pointer to support three states:
+  - `nil`: Task has never been completed
+  - Zero time value (`0001-01-01T00:00:00Z`): Treated as incomplete
+  - Valid time: Task is completed at that time
+- When toggling completion:
+  - Incomplete to complete: Sets to current time
+  - Complete to incomplete: Sets to nil
+
 ### Error Handling
 - 400: Bad Request - Invalid input
 - 404: Not Found - Task doesn't exist

@@ -63,6 +63,15 @@ type Widget interface {
 3. Appropriate widget handles event
 4. State updates trigger re-render
 
+### Time Handling
+- Time values are used to track task completion states
+- Three possible states:
+  1. nil pointer: Never completed
+  2. Zero time: Treated as incomplete
+  3. Valid time: Completed at that time
+- Time comparisons use IsZero() for safety
+- All time operations consider UTC
+
 ### API Integration
 - RESTful API client for task management
 - Environment-based configuration
