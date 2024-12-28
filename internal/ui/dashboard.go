@@ -98,6 +98,7 @@ func NewDashboard(log logger.Logger) *Dashboard {
 		keys:     DefaultKeyMap,
 		help:     help.New(),
 		showHelp: false,
+		debug:    false,
 		logger:   log,
 
 		// Initialize cached styles
@@ -146,74 +147,54 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			d.showHelp = !d.showHelp
 			d.needsRefresh = true
 			return d, nil
+		case msg.String() == "d":
+			d.debug = !d.debug
+			d.needsRefresh = true
+			return d, nil
 		case key.Matches(msg, d.keys.Tab):
 			// Let container handle tab navigation
-			if d.container.HandleFocusKey(msg) {
-				d.needsRefresh = true
-				return d, nil
-			}
+			return d.container.Update(msg)
 		}
-
-		// Forward other key messages to container
-		if !d.showHelp {
-			if _, cmd := d.container.Update(msg); cmd != nil {
-				return d, cmd
-			}
-		}
-
 	case tea.WindowSizeMsg:
 		d.width = msg.Width
 		d.height = msg.Height
 		d.needsRefresh = true
-
-		// Update container size
-		contentHeight := d.height - 4
-		if _, cmd := d.container.Update(tea.WindowSizeMsg{
-			Width:  d.width - 2,
-			Height: contentHeight,
-		}); cmd != nil {
-			return d, cmd
-		}
+		return d, nil
 	}
 
-	return d, nil
+	// Forward other messages to container
+	return d.container.Update(msg)
 }
 
 // View implements tea.Model
 func (d *Dashboard) View() string {
 	var b strings.Builder
-	b.Grow(d.width * d.height)
 
-	// Debug header
+	// Header
+	header := "Dashboard"
 	if d.debug {
-		d.logger.Debug("=== Dashboard Debug ===")
-		d.logger.Debug("Window size", logger.NewField("width", d.width), logger.NewField("height", d.height))
+		header += " Debug: ON"
 	}
+	b.WriteString(d.headerStyle.Render(header))
+	b.WriteRune('\n')
 
-	// Add header
-	b.WriteString(d.headerContent)
-	b.WriteByte('\n')
+	// Main content area with padding
+	contentWidth := d.width - 4
+	contentHeight := d.height - 6
 
-	// Add main content area
 	if d.showHelp {
-		helpStyle := d.styleCache.GetContentStyle(d.width-4, d.height-6)
-		b.WriteString(helpStyle.Render("Help\n\n" + d.help.View(d.keys)))
+		helpContent := "Help\n\n" + d.help.View(d.keys)
+		helpStyle := d.styleCache.GetContentStyle(contentWidth, contentHeight)
+		b.WriteString(helpStyle.Render(helpContent))
 	} else {
-		if d.debug {
-			d.logger.Debug("Content area",
-				logger.NewField("width", d.width-4),
-				logger.NewField("height", d.height-6))
-		}
-		b.WriteString(d.container.View())
+		containerStyle := d.styleCache.GetContentStyle(contentWidth, contentHeight)
+		b.WriteString(containerStyle.Render(d.container.View()))
 	}
-	b.WriteByte('\n')
+	b.WriteRune('\n')
 
-	// Add footer
-	b.WriteString(d.footerContent)
+	// Footer
+	b.WriteString(d.footerStyle.Render("Press ? for help"))
 
-	if d.debug {
-		d.logger.Debug("=== End Debug ===")
-	}
 	return b.String()
 }
 

@@ -88,32 +88,33 @@ func (l *testLogger) log(level, msg string, fields ...types.Field) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	// Combine logger fields with message fields
-	allFields := make([]types.Field, 0, len(l.fields)+len(fields))
-	allFields = append(allFields, l.fields...)
-	allFields = append(allFields, fields...)
+	// Combine logger fields with call fields
+	allFields := make([]types.Field, len(l.fields)+len(fields))
+	copy(allFields, l.fields)
+	copy(allFields[len(l.fields):], fields)
 
 	// Create log entry
 	entry := map[string]interface{}{
 		"level":     level,
-		"timestamp": time.Now().Format(time.RFC3339),
 		"msg":       msg,
+		"timestamp": time.Now().Format(time.RFC3339),
 	}
 
-	// Add fields
-	for _, f := range allFields {
-		entry[f.Key] = f.Value
+	// Add fields to entry
+	for _, field := range allFields {
+		entry[field.Key] = field.Value
 	}
 
-	// Write log entry
+	// Marshal to JSON
 	data, err := json.Marshal(entry)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to marshal log entry: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error marshaling log entry: %v\n", err)
 		return
 	}
 
+	// Write to file
 	if _, err := l.file.Write(append(data, '\n')); err != nil {
-		fmt.Fprintf(os.Stderr, "Failed to write log entry: %v\n", err)
+		fmt.Fprintf(os.Stderr, "Error writing log entry: %v\n", err)
 	}
 }
 
