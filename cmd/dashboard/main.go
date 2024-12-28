@@ -11,14 +11,21 @@ import (
 	"github.com/jonesrussell/dashboard/internal/ui"
 )
 
+const (
+	logMaxSizeMB    = 10 // 10MB
+	logMaxBackups   = 3  // Keep 3 backups
+	logMaxAgeDays   = 7  // 7 days
+	logDefaultLevel = "info"
+)
+
 func main() {
 	// Initialize logger
 	log, err := logger.New(types.Config{
-		Level:      "info",
+		Level:      logDefaultLevel,
 		OutputPath: "dashboard.log",
-		MaxSize:    10,    // 10MB
-		MaxBackups: 3,     // Keep 3 backups
-		MaxAge:     7,     // 7 days
+		MaxSize:    logMaxSizeMB,
+		MaxBackups: logMaxBackups,
+		MaxAge:     logMaxAgeDays,
 		Compress:   true,  // Compress old files
 		Debug:      false, // Production mode
 	})

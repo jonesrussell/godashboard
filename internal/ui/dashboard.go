@@ -11,8 +11,8 @@ import (
 	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
-	"github.com/jonesrussell/dashboard/internal/ui/widgets/sysinfo"
-	"github.com/jonesrussell/dashboard/internal/ui/widgets/tasks"
+	sysinfo "github.com/jonesrussell/dashboard/internal/ui/widgets/sysinfo"
+	tasks "github.com/jonesrussell/dashboard/internal/ui/widgets/tasks"
 )
 
 const (
@@ -22,15 +22,6 @@ const (
 	contentPadding   = 2
 	headerHeight     = 1
 	footerHeight     = 1
-)
-
-// Dashboard messages
-type dashboardMsg int
-
-const (
-	msgNone dashboardMsg = iota
-	msgToggleHelp
-	msgToggleDebug
 )
 
 // KeyMap defines the keybindings for the dashboard
@@ -135,11 +126,11 @@ func (d *Dashboard) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	// Update widgets
 	if sysInfo, cmd := d.sysInfo.Update(msg); cmd != nil {
 		cmds = append(cmds, cmd)
-		d.sysInfo = sysInfo.(components.Widget)
+		d.sysInfo = sysInfo
 	}
 	if tasks, cmd := d.tasks.Update(msg); cmd != nil {
 		cmds = append(cmds, cmd)
-		d.tasks = tasks.(components.Widget)
+		d.tasks = tasks
 	}
 
 	return d, tea.Batch(cmds...)

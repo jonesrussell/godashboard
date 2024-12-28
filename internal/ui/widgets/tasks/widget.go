@@ -1,3 +1,6 @@
+// Package tasks provides a widget for managing tasks in the dashboard.
+// It implements the Widget interface and handles task creation, deletion,
+// and status toggling through a terminal user interface.
 package tasks
 
 import (
@@ -36,11 +39,12 @@ func (w *Widget) Init() tea.Cmd {
 
 // Update implements components.Widget
 func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
+	if !w.IsFocused() {
+		return w, nil
+	}
+
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
-		if !w.IsFocused() {
-			return w, nil
-		}
 		switch msg.String() {
 		case "up", "k":
 			if w.selected > 0 {
@@ -51,26 +55,29 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 				w.selected++
 			}
 		case " ":
-			if w.selected >= 0 && w.selected < len(w.tasks) {
-				return w, w.toggleTask(w.tasks[w.selected].ID)
+			if len(w.tasks) > 0 {
+				id := w.tasks[w.selected].ID
+				return w, w.toggleTask(id)
 			}
 		case "d":
-			if w.selected >= 0 && w.selected < len(w.tasks) {
-				return w, w.deleteTask(w.tasks[w.selected].ID)
+			if len(w.tasks) > 0 {
+				id := w.tasks[w.selected].ID
+				return w, w.deleteTask(id)
 			}
-		case "n":
-			return w, w.createTask
 		}
 	case tasksMsg:
-		w.tasks = msg
+		w.tasks = []Task(msg)
 		w.loading = false
-		w.lastError = nil
+		if w.selected >= len(w.tasks) {
+			w.selected = len(w.tasks) - 1
+		}
 	case errorMsg:
-		w.lastError = msg
+		w.lastError = error(msg)
 		w.loading = false
 	case loadingMsg:
 		w.loading = bool(msg)
 	}
+
 	return w, nil
 }
 
@@ -169,8 +176,7 @@ func (w *Widget) toggleTask(id string) tea.Cmd {
 			task.CompletedAt = nil
 		}
 
-		_, err := w.client.UpdateTask(id, input)
-		if err != nil {
+		if _, err := w.client.UpdateTask(id, input); err != nil {
 			return errorMsg(err)
 		}
 		return w.fetchTasks()
@@ -179,7 +185,8 @@ func (w *Widget) toggleTask(id string) tea.Cmd {
 
 func (w *Widget) deleteTask(id string) tea.Cmd {
 	return func() tea.Msg {
-		if err := w.client.DeleteTask(id); err != nil {
+		err := w.client.DeleteTask(id)
+		if err != nil {
 			return errorMsg(err)
 		}
 		return w.fetchTasks()
