@@ -1,93 +1,58 @@
+linters:
+  disable-all: true
+  enable:
+  - gocritic
+  - gofmt
+  - goimports
+  - gosimple
+  - govet
+  - ineffassign
+  - misspell
+  - revive
+  - staticcheck
+  - typecheck
+  - unparam
+  - unused
+  - mnd
+  - copyloopvar # replacement for exportloopref
+
 linters-settings:
-  govet:
-    check-shadowing: true
-  golint:
-    min-confidence: 0
-  gocyclo:
-    min-complexity: 15
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 3
-    min-occurrences: 3
-  misspell:
-    locale: US
-  lll:
-    line-length: 140
+  depguard:
+    rules:
+      main:
+        files:
+        - $all
+        allow:
+        - $gostd # Allow all Go standard library imports
+        - github.com/charmbracelet
+        - github.com/jonesrussell/dashboard
+        - github.com/google/wire
+        - go.uber.org/zap
+        - gopkg.in/natefinch/lumberjack.v2
   gocritic:
     enabled-tags:
-      - diagnostic
-      - experimental
-      - opinionated
-      - performance
-      - style
-  funlen:
-    lines: 100
-    statements: 50
-
-linters:
-  enable:
-    - bodyclose
-    - deadcode
-    - depguard
-    - dogsled
-    - dupl
-    - errcheck
-    - funlen
-    - gochecknoinits
-    - goconst
-    - gocritic
-    - gocyclo
-    - gofmt
-    - goimports
-    - golint
-    - gomnd
-    - goprintffuncname
-    - gosec
-    - gosimple
-    - govet
-    - ineffassign
-    - interfacer
-    - lll
-    - misspell
-    - nakedret
-    - rowserrcheck
-    - scopelint
-    - staticcheck
-    - structcheck
-    - stylecheck
-    - typecheck
-    - unconvert
-    - unparam
-    - unused
-    - varcheck
-    - whitespace
+    - diagnostic
+    - style
+    - performance
+    disabled-checks:
+    - hugeParam # Disable hugeParam check as it's not relevant for our UI components
+  mnd:
+    ignored-numbers:
+    - '0o755' # Common file permission
+    - '4' # Common UI padding/margin
+    - '6' # Common UI padding/margin
+    ignored-files:
+    - 'internal/ui/*'
+    - 'internal/logger/provider.go'
 
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gomnd
-        - dupl
-        - goconst
-    - path: internal/ui/
-      linters:
-        - lll  # Line length in UI code can be longer due to string literals
-
-run:
-  timeout: 5m
-  skip-dirs:
-    - vendor
-    - testdata
-  skip-files:
-    - ".*_test\\.go$"
+  exclude-use-default: false
+  max-per-linter: 0
+  max-same-issues: 0
+  exclude-dirs:
+  - build/
+  - coverage/
 
 output:
-  format: colored-line-number
-  print-issued-lines: true
-  print-linter-name: true
-
-service:
-  golangci-lint-version: 1.55.x
-  prepare:
-    - go mod download 
+  formats:
+  - format: colored-line-number

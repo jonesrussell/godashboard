@@ -1,3 +1,4 @@
+// Package components provides reusable UI components for the dashboard
 package components
 
 import tea "github.com/charmbracelet/bubbletea"

@@ -1,3 +1,4 @@
+// Package logger provides structured logging capabilities for the dashboard
 package logger
 
 import "context"

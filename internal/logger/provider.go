@@ -2,14 +2,23 @@ package logger
 
 import "github.com/google/wire"
 
+const (
+	// DefaultMaxSize is the default maximum size in megabytes of the log file before it gets rotated
+	DefaultMaxSize = 10
+	// DefaultMaxBackups is the default maximum number of old log files to retain
+	DefaultMaxBackups = 5
+	// DefaultMaxAge is the default maximum number of days to retain old log files
+	DefaultMaxAge = 30
+)
+
 // DefaultConfig returns the default logger configuration
 func DefaultConfig() Config {
 	return Config{
 		Level:      "info",
 		OutputPath: "logs/app.log",
-		MaxSize:    10, // 10MB
-		MaxBackups: 5,  // 5 backups
-		MaxAge:     30, // 30 days
+		MaxSize:    DefaultMaxSize,    // 10MB
+		MaxBackups: DefaultMaxBackups, // 5 backups
+		MaxAge:     DefaultMaxAge,     // 30 days
 		Compress:   true,
 		Debug:      false,
 	}

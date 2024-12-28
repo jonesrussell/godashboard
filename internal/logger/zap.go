@@ -29,7 +29,7 @@ type Config struct {
 func NewZapLogger(cfg Config) (Logger, error) {
 	// Create the log directory if it doesn't exist
 	if cfg.OutputPath != "" {
-		if err := os.MkdirAll(filepath.Dir(cfg.OutputPath), 0755); err != nil {
+		if err := os.MkdirAll(filepath.Dir(cfg.OutputPath), 0o755); err != nil {
 			return nil, err
 		}
 	}

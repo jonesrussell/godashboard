@@ -1,3 +1,4 @@
+// Package ui implements the terminal user interface for the dashboard
 package ui
 
 import (
@@ -30,7 +31,7 @@ func (k KeyMap) FullHelp() [][]key.Binding {
 	}
 }
 
-// Default keybindings
+// DefaultKeyMap defines the default keyboard shortcuts for the dashboard
 var DefaultKeyMap = KeyMap{
 	Quit: key.NewBinding(
 		key.WithKeys("q", "ctrl+c"),

@@ -1,3 +1,4 @@
+// Package main is the entry point for the dashboard application
 package main
 
 import (
@@ -20,11 +21,11 @@ type App struct {
 }
 
 // NewApp creates a new application instance
-func NewApp(log logger.Logger) (*App, error) {
+func NewApp(log logger.Logger) *App {
 	return &App{
 		logger: log,
 		ui:     ui.NewDashboard(),
-	}, nil
+	}
 }
 
 func openExternalWindow() error {
