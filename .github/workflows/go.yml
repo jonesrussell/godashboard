@@ -88,8 +88,8 @@ jobs:
           CC: ${{ matrix.cc }}
           CGO_ENABLED: 1
         run: |
-          task docker:build-image
-          task docker:build-${{ matrix.os }}
+          task wire:${{ matrix.os }}
+          task build:${{ matrix.os }}
 
       - name: Get version
         id: get_version
