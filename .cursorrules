@@ -4,11 +4,15 @@
 - Terminal UI dashboard using Bubbletea and Lipgloss
 - Integrates with Godo for todo management
 - Follows standard Go project layout
+- Uses Wire for dependency injection
+- Uses Zap for structured logging
 
 ## Code Style
 - Follow standard Go conventions
 - Use gofmt for formatting
 - Apply golangci-lint rules
+- Use constants for magic numbers
+- Document all exported symbols
 
 ## Deprecation Handling
 - Always use latest non-deprecated API methods
@@ -25,6 +29,7 @@
   - Define interfaces in interfaces.go
 - Prefer constructor injection over field injection
 - Use interfaces for external dependencies
+- Run wire before builds and tests
 
 ## Logging
 - Use uber-go/zap for logging
@@ -33,6 +38,8 @@
   - Log levels: debug, info, warn, error
   - Include request ID in all logs
 - Configure log rotation
+- Inject logger through wire
+- Use context for request tracking
 
 ## Go Best Practices
 - Use context.Context in all long-running operations
@@ -47,19 +54,30 @@
 - *.go: gofmt
 - go.mod: none
 - *.md: prettier
+- provider.go: wire providers
+- interfaces.go: package interfaces
+- *_test.go: table-driven tests
 
 ## Linting
-- golangci-lint
-- staticcheck
-- errcheck
-- gosimple
+- golangci-lint with custom config
+- Enforce consistent code style
+- No magic numbers
+- Document exported symbols
+- Use build tags correctly
 
 ## Testing
 - Use table-driven tests
 - Require test coverage > 80%
 - Mock external dependencies
+- Test both success and error paths
+- Add benchmark tests for UI
+- Test wire configurations
+- Include integration tests
 
 ## Documentation
 - All exported functions must be documented
 - Include examples in doc comments
-- Keep line length < 100 chars 
+- Keep line length < 100 chars
+- Document configuration options
+- Add package documentation
+- Include usage examples 

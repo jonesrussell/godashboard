@@ -9,10 +9,13 @@ A modern terminal user interface (TUI) dashboard built with [Bubbletea](https://
 - ⌨️ Intuitive keyboard controls
 - 📊 Modular widget system
 - 💡 Built-in help system
+- 📝 Structured logging with Zap
+- 🔌 Dependency injection with Wire
 
 ## Prerequisites
 
 - Go 1.23 or higher
+- Task (taskfile.dev) for development commands
 
 ## Installation
 
@@ -21,22 +24,40 @@ A modern terminal user interface (TUI) dashboard built with [Bubbletea](https://
 git clone https://github.com/yourusername/dashboard
 cd dashboard
 
+# Install development tools
+task install-tools
+
 # Install dependencies
-go mod tidy
+task deps
 ```
 
-## Running the Dashboard
+## Development Commands
 
 ```bash
-go run cmd/dashboard/main.go
+# Run the application
+task run
+
+# Run in external window
+task run-external
+
+# Format code
+task fmt
+
+# Run linter
+task lint
+
+# Run tests
+task test
+
+# Run all checks
+task all
+
+# Clean build artifacts
+task clean
+
+# Watch for changes
+task watch
 ```
-
-## Keyboard Controls
-
-- `q` or `ctrl+c` - Quit the application
-- `?` - Toggle help menu
-- `tab` - Navigate between widgets
-- `enter` - Select/activate current widget
 
 ## Project Structure
 
@@ -48,9 +69,17 @@ go run cmd/dashboard/main.go
 │   ├── ui/              # UI components and layouts
 │   │   ├── styles/      # Lipgloss styles
 │   │   └── components/  # Reusable UI components
-│   └── models/          # Data models
-└── pkg/                 # Public packages
+│   └── logger/          # Structured logging system
+├── build/               # Build artifacts
+└── coverage/            # Test coverage reports
 ```
+
+## Keyboard Controls
+
+- `q` or `ctrl+c` - Quit the application
+- `?` - Toggle help menu
+- `tab` - Navigate between widgets
+- `enter` - Select/activate current widget
 
 ## Development
 
@@ -67,6 +96,24 @@ type Widget interface {
 }
 ```
 
+### Logging
+
+The application uses [uber-go/zap](https://github.com/uber-go/zap) for structured logging with the following features:
+
+- Multiple log levels (Debug, Info, Warn, Error, Fatal)
+- Structured field-based logging
+- Automatic log rotation
+- Request ID tracking
+- Context-aware logging
+
+### Dependency Injection
+
+We use [google/wire](https://github.com/google/wire) for compile-time dependency injection:
+
+- Providers are defined in `provider.go` files
+- Wire is automatically run before builds
+- See `cmd/dashboard/wire.go` for the main injection setup
+
 ## Contributing
 
 1. Fork the repository
@@ -82,4 +129,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - [Charm](https://charm.sh/) for the amazing Bubbletea and Lipgloss libraries
+- [Uber](https://github.com/uber-go/zap) for the Zap logging library
+- [Google](https://github.com/google/wire) for the Wire dependency injection tool
 - The Go community for inspiration and support
