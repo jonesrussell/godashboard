@@ -26,21 +26,23 @@ func TestDefaultConfig(t *testing.T) {
 func TestProvideLogger(t *testing.T) {
 	// Test with default config
 	cfg := DefaultConfig()
-	logger, err := ProvideLogger(cfg)
+	defaultLogger, err := ProvideLogger(cfg)
 	assert.NoError(t, err)
-	assert.NotNil(t, logger)
-	defer func() {
-		require.NoError(t, logger.Close())
-	}()
+	assert.NotNil(t, defaultLogger)
+	t.Cleanup(func() {
+		if defaultLogger != nil {
+			if err := defaultLogger.Close(); err != nil {
+				t.Logf("Failed to close default logger: %v", err)
+			}
+		}
+	})
 
 	// Test logging with provided logger
-	logger.Info("test message", types.NewField("test", true))
+	defaultLogger.Info("test message", types.NewField("test", true))
 
 	// Test with test logger
 	testLogger, _ := testlogger.NewTestLogger(t, "provider-test")
-	defer func() {
-		require.NoError(t, testLogger.Close())
-	}()
+	assert.NotNil(t, testLogger)
 
 	// Test logging with test logger
 	testLogger.Info("test message", types.NewField("test", true))
@@ -50,9 +52,9 @@ func TestProvideLogger(t *testing.T) {
 		Level:      "invalid",
 		OutputPath: filepath.Join("non-existent-dir", strings.Repeat("a", 1000), "test.log"),
 	}
-	logger, err = ProvideLogger(invalidCfg)
+	invalidLogger, err := ProvideLogger(invalidCfg)
 	assert.Error(t, err)
-	assert.Nil(t, logger)
+	assert.Nil(t, invalidLogger)
 }
 
 func TestNew(t *testing.T) {

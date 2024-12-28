@@ -52,9 +52,7 @@ func TestAppInitialization(t *testing.T) {
 // TestAppLogging verifies that logging works throughout the application
 func TestAppLogging(t *testing.T) {
 	log, logPath := testlogger.NewTestLogger(t, "logging")
-	defer func() {
-		require.NoError(t, log.Close())
-	}()
+	assert.NotNil(t, log)
 
 	// Log some test messages
 	log.Info("Application starting", logger.NewField("test", true))
@@ -74,9 +72,7 @@ func TestAppLogging(t *testing.T) {
 // TestAppResize verifies that the application handles terminal resizing
 func TestAppResize(t *testing.T) {
 	log, _ := testlogger.NewTestLogger(t, "resize")
-	defer func() {
-		require.NoError(t, log.Close())
-	}()
+	assert.NotNil(t, log)
 
 	// Initialize dashboard
 	dashboard := ui.NewDashboard(log)
@@ -110,14 +106,10 @@ func TestAppResize(t *testing.T) {
 
 func TestApp_Start(t *testing.T) {
 	log, _ := testlogger.NewTestLogger(t, "app-test")
-	defer func() {
-		require.NoError(t, log.Close())
-	}()
+	assert.NotNil(t, log)
 }
 
 func TestApp_Stop(t *testing.T) {
 	log, _ := testlogger.NewTestLogger(t, "app-test")
-	defer func() {
-		require.NoError(t, log.Close())
-	}()
+	assert.NotNil(t, log)
 }

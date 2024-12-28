@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/jonesrussell/dashboard/internal/logger/types"
 	"github.com/stretchr/testify/assert"
@@ -204,18 +205,21 @@ func TestZapLogger_Close(t *testing.T) {
 	// Create a temporary file
 	tmpFile, err := os.CreateTemp("", "zap-test-*.log")
 	require.NoError(t, err)
-	defer func() {
-		require.NoError(t, os.Remove(tmpFile.Name()))
-	}()
+	tmpName := tmpFile.Name()
+	require.NoError(t, tmpFile.Close())
 
 	logger, err := NewZapLogger(types.Config{
 		Level:      "debug",
-		OutputPath: tmpFile.Name(),
+		OutputPath: tmpName,
 	})
 	require.NoError(t, err)
 
 	// Test closing the logger
 	require.NoError(t, logger.Close())
+
+	// On Windows, we need a small delay to ensure the file handle is released
+	time.Sleep(100 * time.Millisecond)
+	require.NoError(t, os.Remove(tmpName))
 }
 
 func TestZapLogger_WithFields(t *testing.T) {
