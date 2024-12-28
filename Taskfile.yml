@@ -38,6 +38,12 @@ tasks:
     - go test -race -coverprofile={{.COVERAGE_DIR}}/coverage.out -covermode=atomic ./...
     - go tool cover -html={{.COVERAGE_DIR}}/coverage.out -o {{.COVERAGE_DIR}}/coverage.html
 
+  bench:
+    desc: Run benchmark tests
+    deps: [ wire ]
+    cmds:
+    - go test -run=^$ -bench=. -benchmem ./internal/ui/...
+
   build:
     desc: Build the application
     deps: [ wire ]

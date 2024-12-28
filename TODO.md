@@ -12,13 +12,13 @@
   - [ ] Add request ID middleware
   - [x] Add logging utilities and helpers
   - [x] Wire integration
-- [ ] Implement testing framework
+- [x] Implement testing framework
   - [x] Set up test utilities and helpers
   - [x] Add logger package tests
   - [x] Add UI component tests
   - [x] Add integration tests
   - [x] Set up test coverage reporting
-  - [ ] Add benchmark tests
+  - [x] Add benchmark tests
 - [ ] Implement core dashboard features
   - [ ] Add widget container system
   - [ ] Create widget focus management
@@ -65,13 +65,21 @@
 - [ ] Document configuration options
 
 ## Testing
-- [ ] Unit tests for core components
-- [ ] Integration tests
-- [ ] Performance benchmarks
+- [x] Unit tests for core components
+- [x] Integration tests
+- [x] Performance benchmarks
+  - [x] Dashboard initialization
+  - [x] View rendering
+  - [x] Update handling
+  - [x] Resize handling
+  - [x] Help toggle
 - [ ] Cross-platform testing
 
 ## Optimization
 - [ ] Improve rendering performance
+  - [ ] Reduce View allocations (currently ~36KB/op)
+  - [ ] Optimize resize handling (currently ~186KB/op)
+  - [ ] Optimize help toggle (currently ~76KB/op)
 - [ ] Reduce memory usage
 - [ ] Optimize widget updates
 
