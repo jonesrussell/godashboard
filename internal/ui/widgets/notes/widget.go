@@ -7,6 +7,7 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
 )
@@ -22,7 +23,10 @@ type Widget struct {
 }
 
 // New creates a new notes widget
-func New(opts ...ClientOption) *Widget {
+func New(log logger.Logger, opts ...ClientOption) *Widget {
+	// Add logger to client options
+	opts = append(opts, WithLogger(log))
+
 	return &Widget{
 		client:   NewClient(opts...),
 		notes:    make([]Note, 0),

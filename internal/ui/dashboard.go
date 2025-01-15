@@ -98,7 +98,7 @@ func NewDashboard(log logger.Logger) *Dashboard {
 		debug:    false,
 		logger:   log,
 		sysInfo:  sysinfo.New(),
-		tasks:    notes.New(),
+		tasks:    notes.New(log),
 	}
 }
 

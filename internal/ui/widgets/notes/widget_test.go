@@ -4,12 +4,15 @@ import (
 	"testing"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/jonesrussell/dashboard/internal/testutil/testlogger"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestNotesWidget(t *testing.T) {
+	log, _ := testlogger.NewTestLogger(t, "notes-test")
+	w := New(log)
+
 	t.Run("initialization", func(t *testing.T) {
-		w := New()
 		assert.NotNil(t, w)
 		assert.Equal(t, 0, w.selected)
 		assert.False(t, w.loading)
@@ -18,7 +21,7 @@ func TestNotesWidget(t *testing.T) {
 
 	t.Run("view states", func(t *testing.T) {
 		t.Run("normal view", func(t *testing.T) {
-			w := New()
+			w := New(log)
 			w.notes = []Note{{
 				ID:          "1",
 				Title:       "Test Note",
@@ -31,7 +34,7 @@ func TestNotesWidget(t *testing.T) {
 		})
 
 		t.Run("error view", func(t *testing.T) {
-			w := New()
+			w := New(log)
 			w.lastError = assert.AnError
 			view := w.View()
 			assert.Contains(t, view, assert.AnError.Error())
@@ -39,7 +42,6 @@ func TestNotesWidget(t *testing.T) {
 	})
 
 	t.Run("focus handling", func(t *testing.T) {
-		w := New()
 		assert.False(t, w.IsFocused())
 		w.Focus()
 		assert.True(t, w.IsFocused())
@@ -48,7 +50,7 @@ func TestNotesWidget(t *testing.T) {
 	})
 
 	t.Run("navigation", func(t *testing.T) {
-		w := New()
+		w := New(log)
 		w.notes = []Note{{ID: "1"}, {ID: "2"}}
 		w.Focus()
 
@@ -75,7 +77,6 @@ func TestNotesWidget(t *testing.T) {
 
 	t.Run("commands", func(t *testing.T) {
 		t.Run("fetch notes", func(t *testing.T) {
-			w := New()
 			msg := w.fetchNotes()
 			assert.True(t, w.loading)
 			assert.NotNil(t, msg)
@@ -84,7 +85,7 @@ func TestNotesWidget(t *testing.T) {
 		})
 
 		t.Run("note operations", func(t *testing.T) {
-			w := New()
+			w := New(log)
 			w.notes = []Note{{ID: "1"}}
 			w.selected = 0
 
@@ -109,7 +110,7 @@ func TestNotesWidget(t *testing.T) {
 	})
 
 	t.Run("key commands", func(t *testing.T) {
-		w := New()
+		w := New(log)
 		w.notes = []Note{{ID: "1"}}
 		w.Focus()
 
