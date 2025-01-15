@@ -95,20 +95,24 @@ func NewClient(opts ...ClientOption) *Client {
 	return client
 }
 
+// TasksResponse represents the API response structure
+type TasksResponse struct {
+	Tasks []Note `json:"tasks"`
+}
+
 // Note represents a task from the godo API
 type Note struct {
-	ID          string     `json:"id"`
-	Title       string     `json:"title"`
-	Description string     `json:"description,omitempty"`
-	CreatedAt   time.Time  `json:"created_at"`
-	UpdatedAt   time.Time  `json:"updated_at"`
-	CompletedAt *time.Time `json:"completed_at,omitempty"`
+	ID        string    `json:"id"`
+	Content   string    `json:"content"`
+	Done      bool      `json:"done"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // NoteInput represents the input for creating/updating a task
 type NoteInput struct {
-	Title       string `json:"title"`
-	Description string `json:"description,omitempty"`
+	Content string `json:"content"`
+	Done    bool   `json:"done,omitempty"`
 }
 
 // ListNotes retrieves all tasks
@@ -159,34 +163,25 @@ func (c *Client) ListNotes() ([]Note, error) {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	// Try to decode as a single note first
-	var note Note
-	if err := json.NewDecoder(resp.Body).Decode(&note); err != nil {
-		// Reset the reader
-		resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
-		// Try to decode as array
-		var notes []Note
-		if err := json.NewDecoder(resp.Body).Decode(&notes); err != nil {
-			c.logger.Error("Failed to decode response",
-				logger.NewField("error", err),
-				logger.NewField("body", string(bodyBytes)),
-			)
-			return nil, fmt.Errorf("failed to decode response: %w", err)
-		}
-		return notes, nil
+	var response TasksResponse
+	if err := json.NewDecoder(resp.Body).Decode(&response); err != nil {
+		c.logger.Error("Failed to decode response",
+			logger.NewField("error", err),
+			logger.NewField("body", string(bodyBytes)),
+		)
+		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	// If we successfully decoded a single note, return it as a slice
-	c.logger.Debug("Successfully decoded single note",
-		logger.NewField("id", note.ID),
+	c.logger.Debug("Successfully decoded notes",
+		logger.NewField("count", len(response.Tasks)),
 	)
-	return []Note{note}, nil
+	return response.Tasks, nil
 }
 
 // CreateNote creates a new task
 func (c *Client) CreateNote(input NoteInput) (*Note, error) {
 	c.logger.Debug("Creating note",
-		logger.NewField("title", input.Title),
+		logger.NewField("content", input.Content),
 	)
 
 	body, err := json.Marshal(input)
@@ -250,7 +245,7 @@ func (c *Client) CreateNote(input NoteInput) (*Note, error) {
 func (c *Client) UpdateNote(id string, input NoteInput) (*Note, error) {
 	c.logger.Debug("Updating note",
 		logger.NewField("id", id),
-		logger.NewField("title", input.Title),
+		logger.NewField("content", input.Content),
 	)
 
 	body, err := json.Marshal(input)

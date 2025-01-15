@@ -3,7 +3,6 @@ package notes
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -124,15 +123,12 @@ func (w *Widget) View() string {
 
 			// Note status
 			status := "[ ]"
-			if note.CompletedAt != nil && !note.CompletedAt.IsZero() {
+			if note.Done {
 				status = "[✓]"
 			}
 
 			// Format note line
-			noteLine := fmt.Sprintf("%s %s", status, note.Title)
-			if note.Description != "" {
-				noteLine += fmt.Sprintf(" - %s", note.Description)
-			}
+			noteLine := fmt.Sprintf("%s %s", status, note.Content)
 			b.WriteString(noteStyle.Render(noteLine))
 			b.WriteRune('\n')
 		}
@@ -162,15 +158,8 @@ func (w *Widget) toggleNote(id string) tea.Cmd {
 	return func() tea.Msg {
 		note := w.notes[w.selected]
 		input := NoteInput{
-			Title:       note.Title,
-			Description: note.Description,
-		}
-
-		now := time.Now()
-		if note.CompletedAt == nil {
-			note.CompletedAt = &now
-		} else {
-			note.CompletedAt = nil
+			Content: note.Content,
+			Done:    !note.Done,
 		}
 
 		_, err := w.client.UpdateNote(id, input)
@@ -192,7 +181,8 @@ func (w *Widget) deleteNote(id string) tea.Cmd {
 
 func (w *Widget) createNote() tea.Msg {
 	input := NoteInput{
-		Title: "New Note",
+		Content: "New Note",
+		Done:    false,
 	}
 	_, err := w.client.CreateNote(input)
 	if err != nil {

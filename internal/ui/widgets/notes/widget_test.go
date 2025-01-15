@@ -2,6 +2,7 @@ package notes
 
 import (
 	"testing"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/jonesrussell/dashboard/internal/testutil/testlogger"
@@ -23,14 +24,15 @@ func TestNotesWidget(t *testing.T) {
 		t.Run("normal view", func(t *testing.T) {
 			w := New(log)
 			w.notes = []Note{{
-				ID:          "1",
-				Title:       "Test Note",
-				Description: "Test Description",
+				ID:        "1",
+				Content:   "Test Note",
+				Done:      false,
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
 			}}
 
 			view := w.View()
 			assert.Contains(t, view, "Test Note")
-			assert.Contains(t, view, "Test Description")
 		})
 
 		t.Run("error view", func(t *testing.T) {
@@ -51,7 +53,10 @@ func TestNotesWidget(t *testing.T) {
 
 	t.Run("navigation", func(t *testing.T) {
 		w := New(log)
-		w.notes = []Note{{ID: "1"}, {ID: "2"}}
+		w.notes = []Note{
+			{ID: "1", Content: "Note 1"},
+			{ID: "2", Content: "Note 2"},
+		}
 		w.Focus()
 
 		tests := []struct {
@@ -86,7 +91,11 @@ func TestNotesWidget(t *testing.T) {
 
 		t.Run("note operations", func(t *testing.T) {
 			w := New(log)
-			w.notes = []Note{{ID: "1"}}
+			w.notes = []Note{{
+				ID:      "1",
+				Content: "Test Note",
+				Done:    false,
+			}}
 			w.selected = 0
 
 			tests := []struct {
@@ -111,7 +120,11 @@ func TestNotesWidget(t *testing.T) {
 
 	t.Run("key commands", func(t *testing.T) {
 		w := New(log)
-		w.notes = []Note{{ID: "1"}}
+		w.notes = []Note{{
+			ID:      "1",
+			Content: "Test Note",
+			Done:    false,
+		}}
 		w.Focus()
 
 		tests := []struct {
