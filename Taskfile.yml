@@ -3,137 +3,58 @@ version: '3'
 vars:
   BINARY_NAME: dashboard
   BUILD_DIR: build
-  COVERAGE_DIR: coverage
 
 tasks:
   default:
     cmds:
-    - task --list-all
-    silent: true
+      - task: build
 
-  install-tools:
-    desc: Install development tools
+  install-deps:
+    desc: Install project dependencies
     cmds:
-    - go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
-    - go install golang.org/x/tools/cmd/goimports@latest
-    - go install github.com/google/wire/cmd/wire@latest
-    - go install github.com/goreleaser/goreleaser@latest
+      - go mod download
+      - go mod tidy
 
   lint:
-    desc: Run golangci-lint
-    deps: [ wire ]
+    desc: Run linters
     cmds:
-    - golangci-lint run ./...
-
-  fmt:
-    desc: Format code
-    cmds:
-    - gofmt -s -w .
-    - goimports -w .
+      - golangci-lint run ./...
 
   test:
     desc: Run tests with coverage
-    deps: [ wire ]
     cmds:
-    - powershell New-Item -ItemType Directory -Force -Path {{.COVERAGE_DIR}}
-    - go test -race -coverprofile={{.COVERAGE_DIR}}/coverage.out -covermode=atomic ./...
-    - go tool cover -html={{.COVERAGE_DIR}}/coverage.out -o {{.COVERAGE_DIR}}/coverage.html
-
-  bench:
-    desc: Run benchmark tests
-    deps: [ wire ]
-    cmds:
-    - go test -run=^$ -bench=. -benchmem ./internal/ui/...
+      - go test -v -race -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
 
   build:
-    desc: Build the application
-    deps: [ wire ]
+    desc: Build the dashboard binary
+    deps: [install-deps]
     cmds:
-    - powershell -ExecutionPolicy Bypass -File ./scripts/build.ps1 -BuildDir {{.BUILD_DIR}} -BinaryName {{.BINARY_NAME}}
-
-  run:
-    desc: Run the application
-    deps: [ build ]
-    cmds:
-    - '{{.BUILD_DIR}}/windows_amd64/bin/{{.BINARY_NAME}}.exe'
-
-  run-external:
-    desc: Run the application in a new window
-    deps: [ build ]
-    cmds:
-    - '{{.BUILD_DIR}}/windows_amd64/bin/{{.BINARY_NAME}}.exe -external'
+      - mkdir -p {{.BUILD_DIR}}
+      - go build -o {{.BUILD_DIR}}/{{.BINARY_NAME}} ./cmd/dashboard
+    sources:
+      - ./**/*.go
+    generates:
+      - {{.BUILD_DIR}}/{{.BINARY_NAME}}
 
   clean:
     desc: Clean build artifacts
     cmds:
-    - powershell Remove-Item -Path {{.BUILD_DIR}} -Recurse -Force -ErrorAction Ignore
-    - powershell Remove-Item -Path {{.COVERAGE_DIR}} -Recurse -Force -ErrorAction Ignore
+      - rm -rf {{.BUILD_DIR}}
+      - rm -f coverage.out coverage.html
+
+  run:
+    desc: Run the dashboard
+    deps: [build]
+    cmds:
+      - ./{{.BUILD_DIR}}/{{.BINARY_NAME}}
+
+  generate:
+    desc: Run go generate
+    cmds:
+      - go generate ./...
 
   wire:
-    desc: Generate wire dependency injection code
+    desc: Run wire generation
     cmds:
-    - wire ./cmd/dashboard
-
-  all:
-    desc: Run all main tasks
-    cmds:
-    - task: fmt
-    - task: wire
-    - task: lint
-    - task: test
-    - task: build
-
-  ci:
-    desc: Run CI pipeline tasks
-    deps: [ wire ]
-    cmds:
-    - task: lint
-    - task: test
-    - task: build
-
-  watch:
-    desc: Watch for changes and rebuild
-    cmds:
-    - watchexec -r -e go "task build && {{.BUILD_DIR}}\{{.BINARY_NAME}}.exe"
-
-  deps:
-    desc: Download and tidy dependencies
-    cmds:
-    - go mod download
-    - go mod tidy
-
-  run-debug:
-    desc: Run the application with debug output
-    deps: [ build ]
-    cmds:
-    - '{{.BUILD_DIR}}/windows_amd64/bin/{{.BINARY_NAME}}.exe -debug'
-
-  release-test-setup:
-    desc: Test cross-compilation setup locally
-    cmds:
-    - |
-      powershell -Command "
-        $env:CGO_ENABLED='1'
-        $env:CC='gcc'
-        $env:GOOS='windows'
-        $env:GOARCH='amd64'
-        $env:PATH='c:\mingw64\bin;' + $env:PATH
-        go build -o build/test.exe ./cmd/dashboard
-      "
-
-  release-dry-run:
-    desc: Test release process locally without publishing
-    deps: [ wire, release-test-setup ]
-    cmds:
-    - goreleaser release --snapshot --clean --skip=publish,validate
-
-  release-local:
-    desc: Test the full release workflow using act
-    deps: [ wire ]
-    cmds:
-    - powershell $env:GITHUB_TOKEN = (gh auth token); act -j release --secret GITHUB_TOKEN=$env:GITHUB_TOKEN -e .github/workflows/release-test-event.json
-
-  release-init:
-    desc: Initialize test release event file
-    cmds:
-    - powershell | $json = @{ ref = 'refs/tags/v0.0.0-test' repository = @{ name = 'dashboard' owner = @{ login = 'jonesrussell' } } } $json | ConvertTo-Json | Set-Content .github/workflows/release-test-event.json
+      - wire ./...

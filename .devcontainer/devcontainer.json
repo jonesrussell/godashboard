@@ -4,6 +4,14 @@
     "mounts": [
         "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
     ],
+    "postCreateCommand": "go install github.com/go-task/task/v3/cmd/task@latest",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "task.vscode-task"
+            ]
+        }
+    },
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
             "installZsh": true,
