@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -62,8 +63,8 @@ func NewClient(opts ...ClientOption) *Client {
 	defaultLogger, err := logger.New(logger.DefaultConfig())
 	if err != nil {
 		defaultLogger, _ = logger.NewZapLogger(types.Config{
-			Level:      "info",
-			OutputPath: "logs/client.log",
+			Level:      "debug",
+			OutputPath: "logs/app.log",
 		})
 	}
 
@@ -124,6 +125,22 @@ func (c *Client) ListNotes() ([]Note, error) {
 	}
 	defer resp.Body.Close()
 
+	// Read the response body for logging
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.logger.Error("Failed to read response body",
+			logger.NewField("error", err),
+		)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	c.logger.Debug("Received response",
+		logger.NewField("body", string(bodyBytes)),
+	)
+
+	// Create a new reader with the body bytes for decoding
+	resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
 	if resp.StatusCode != http.StatusOK {
 		c.logger.Error("Unexpected status code",
 			logger.NewField("status_code", resp.StatusCode),
@@ -131,18 +148,28 @@ func (c *Client) ListNotes() ([]Note, error) {
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var notes []Note
-	if err := json.NewDecoder(resp.Body).Decode(&notes); err != nil {
-		c.logger.Error("Failed to decode response",
-			logger.NewField("error", err),
-		)
-		return nil, fmt.Errorf("failed to decode response: %w", err)
+	// Try to decode as a single note first
+	var note Note
+	if err := json.NewDecoder(resp.Body).Decode(&note); err != nil {
+		// Reset the reader
+		resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+		// Try to decode as array
+		var notes []Note
+		if err := json.NewDecoder(resp.Body).Decode(&notes); err != nil {
+			c.logger.Error("Failed to decode response",
+				logger.NewField("error", err),
+				logger.NewField("body", string(bodyBytes)),
+			)
+			return nil, fmt.Errorf("failed to decode response: %w", err)
+		}
+		return notes, nil
 	}
 
-	c.logger.Debug("Successfully decoded notes",
-		logger.NewField("count", len(notes)),
+	// If we successfully decoded a single note, return it as a slice
+	c.logger.Debug("Successfully decoded single note",
+		logger.NewField("id", note.ID),
 	)
-	return notes, nil
+	return []Note{note}, nil
 }
 
 // CreateNote creates a new task
@@ -171,6 +198,20 @@ func (c *Client) CreateNote(input NoteInput) (*Note, error) {
 		return nil, fmt.Errorf("failed to create task: %w", err)
 	}
 	defer resp.Body.Close()
+
+	// Read and log response body
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.logger.Error("Failed to read response body",
+			logger.NewField("error", err),
+		)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	c.logger.Debug("Received response",
+		logger.NewField("status_code", resp.StatusCode),
+		logger.NewField("body", string(bodyBytes)),
+	)
+	resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 
 	if resp.StatusCode != http.StatusCreated {
 		c.logger.Error("Unexpected status code",
@@ -231,6 +272,20 @@ func (c *Client) UpdateNote(id string, input NoteInput) (*Note, error) {
 	}
 	defer resp.Body.Close()
 
+	// Read and log response body
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.logger.Error("Failed to read response body",
+			logger.NewField("error", err),
+		)
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+	c.logger.Debug("Received response",
+		logger.NewField("status_code", resp.StatusCode),
+		logger.NewField("body", string(bodyBytes)),
+	)
+	resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
+
 	if resp.StatusCode != http.StatusOK {
 		c.logger.Error("Unexpected status code",
 			logger.NewField("status_code", resp.StatusCode),
@@ -279,6 +334,20 @@ func (c *Client) DeleteNote(id string) error {
 		return fmt.Errorf("failed to delete task: %w", err)
 	}
 	defer resp.Body.Close()
+
+	// Read and log response body
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.logger.Error("Failed to read response body",
+			logger.NewField("error", err),
+		)
+		return fmt.Errorf("failed to read response body: %w", err)
+	}
+	c.logger.Debug("Received response",
+		logger.NewField("status_code", resp.StatusCode),
+		logger.NewField("body", string(bodyBytes)),
+	)
+	resp.Body = io.NopCloser(bytes.NewReader(bodyBytes))
 
 	if resp.StatusCode != http.StatusNoContent {
 		c.logger.Error("Unexpected status code",
