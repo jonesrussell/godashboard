@@ -43,3 +43,4 @@ vendor/
 
 # Project specific
 config.local.yaml 
+.task/checksum/build
