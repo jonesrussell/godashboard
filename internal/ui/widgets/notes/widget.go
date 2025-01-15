@@ -24,6 +24,10 @@ type Widget struct {
 
 // New creates a new notes widget
 func New(log logger.Logger, opts ...ClientOption) *Widget {
+	if log == nil {
+		panic("logger cannot be nil")
+	}
+
 	// Add logger to client options
 	opts = append(opts, WithLogger(log))
 

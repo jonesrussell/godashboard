@@ -91,6 +91,12 @@ type Dashboard struct {
 
 // NewDashboard creates a new dashboard instance
 func NewDashboard(log logger.Logger) *Dashboard {
+	if log == nil {
+		panic("logger cannot be nil")
+	}
+
+	log.Debug("Initializing dashboard")
+
 	return &Dashboard{
 		keys:     DefaultKeyMap,
 		help:     help.New(),

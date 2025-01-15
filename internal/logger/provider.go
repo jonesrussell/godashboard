@@ -17,13 +17,13 @@ const (
 // DefaultConfig returns the default logger configuration
 func DefaultConfig() types.Config {
 	return types.Config{
-		Level:      "info",
+		Level:      "debug",
 		OutputPath: "logs/app.log",
 		MaxSize:    DefaultMaxSize,    // 10MB
 		MaxBackups: DefaultMaxBackups, // 5 backups
 		MaxAge:     DefaultMaxAge,     // 30 days
 		Compress:   true,
-		Debug:      false,
+		Debug:      true,
 	}
 }
 

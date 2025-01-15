@@ -62,6 +62,11 @@ func NewClient(opts ...ClientOption) *Client {
 	// Create default logger if none provided
 	defaultLogger, err := logger.New(logger.DefaultConfig())
 	if err != nil {
+		// Ensure logs directory exists
+		if err := os.MkdirAll("logs", 0755); err != nil {
+			panic(fmt.Sprintf("failed to create logs directory: %v", err))
+		}
+
 		defaultLogger, _ = logger.NewZapLogger(types.Config{
 			Level:      "debug",
 			OutputPath: "logs/app.log",
@@ -75,6 +80,12 @@ func NewClient(opts ...ClientOption) *Client {
 		},
 		logger: defaultLogger,
 	}
+
+	// Verify logger is working
+	client.logger.Debug("Client initialized",
+		logger.NewField("base_url", client.baseURL),
+		logger.NewField("timeout", client.httpClient.Timeout),
+	)
 
 	// Apply options
 	for _, opt := range opts {
