@@ -1,37 +1,45 @@
-package tasks
+package notes
 
 import (
 	"fmt"
 	"strings"
-	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
 )
 
-// Widget represents the tasks widget
+// Widget represents the notes widget
 type Widget struct {
 	components.BaseWidget
 	client    *Client
-	tasks     []Task
+	notes     []Note
 	selected  int
 	loading   bool
 	lastError error
 }
 
-// New creates a new tasks widget
-func New(opts ...ClientOption) *Widget {
+// New creates a new notes widget
+func New(log logger.Logger, opts ...ClientOption) *Widget {
+	if log == nil {
+		panic("logger cannot be nil")
+	}
+
+	// Add logger to client options
+	opts = append(opts, WithLogger(log))
+
 	return &Widget{
 		client:   NewClient(opts...),
-		selected: -1,
+		notes:    make([]Note, 0),
+		selected: 0,
 	}
 }
 
 // Init implements components.Widget
 func (w *Widget) Init() tea.Cmd {
-	return w.fetchTasks
+	return w.fetchNotes
 }
 
 // Update implements components.Widget
@@ -47,22 +55,22 @@ func (w *Widget) Update(msg tea.Msg) (components.Widget, tea.Cmd) {
 				w.selected--
 			}
 		case "down", "j":
-			if w.selected < len(w.tasks)-1 {
+			if w.selected < len(w.notes)-1 {
 				w.selected++
 			}
 		case " ":
-			if w.selected >= 0 && w.selected < len(w.tasks) {
-				return w, w.toggleTask(w.tasks[w.selected].ID)
+			if w.selected >= 0 && w.selected < len(w.notes) {
+				return w, w.toggleNote(w.notes[w.selected].ID)
 			}
 		case "d":
-			if w.selected >= 0 && w.selected < len(w.tasks) {
-				return w, w.deleteTask(w.tasks[w.selected].ID)
+			if w.selected >= 0 && w.selected < len(w.notes) {
+				return w, w.deleteNote(w.notes[w.selected].ID)
 			}
 		case "n":
-			return w, w.createTask
+			return w, w.createNote
 		}
-	case tasksMsg:
-		w.tasks = msg
+	case notesMsg:
+		w.notes = msg
 		w.loading = false
 		w.lastError = nil
 	case errorMsg:
@@ -81,7 +89,7 @@ func (w *Widget) View() string {
 	b.Grow(width * height)
 
 	// Title
-	b.WriteString(styles.Title.Render("Tasks"))
+	b.WriteString(styles.Title.Render("Notes"))
 	b.WriteRune('\n')
 	b.WriteRune('\n')
 
@@ -99,32 +107,29 @@ func (w *Widget) View() string {
 		return w.GetStyle().Width(width).Height(height).Render(b.String())
 	}
 
-	// Tasks
-	if len(w.tasks) == 0 {
+	// Notes
+	if len(w.notes) == 0 {
 		subtleStyle := lipgloss.NewStyle().Foreground(styles.Subtle)
-		b.WriteString(subtleStyle.Render("No tasks"))
+		b.WriteString(subtleStyle.Render("No notes"))
 		b.WriteString("\n\n")
-		b.WriteString(subtleStyle.Render("Press 'n' to create a new task"))
+		b.WriteString(subtleStyle.Render("Press 'n' to create a new note"))
 	} else {
-		for i, task := range w.tasks {
-			// Task style
-			taskStyle := lipgloss.NewStyle()
+		for i, note := range w.notes {
+			// Note style
+			noteStyle := lipgloss.NewStyle()
 			if i == w.selected && w.IsFocused() {
-				taskStyle = styles.Selected
+				noteStyle = styles.Selected
 			}
 
-			// Task status
+			// Note status
 			status := "[ ]"
-			if task.CompletedAt != nil && !task.CompletedAt.IsZero() {
+			if note.Done {
 				status = "[✓]"
 			}
 
-			// Format task line
-			taskLine := fmt.Sprintf("%s %s", status, task.Title)
-			if task.Description != "" {
-				taskLine += fmt.Sprintf(" - %s", task.Description)
-			}
-			b.WriteString(taskStyle.Render(taskLine))
+			// Format note line
+			noteLine := fmt.Sprintf("%s %s", status, note.Content)
+			b.WriteString(noteStyle.Render(noteLine))
 			b.WriteRune('\n')
 		}
 	}
@@ -139,60 +144,49 @@ func (w *Widget) View() string {
 	return w.GetStyle().Width(width).Height(height).Render(b.String())
 }
 
-// Message types
-type tasksMsg []Task
-type errorMsg error
-type loadingMsg bool
-
 // Commands
-func (w *Widget) fetchTasks() tea.Msg {
+func (w *Widget) fetchNotes() tea.Msg {
 	w.loading = true
-	tasks, err := w.client.ListTasks()
+	notes, err := w.client.ListNotes()
 	if err != nil {
 		return errorMsg(err)
 	}
-	return tasksMsg(tasks)
+	return notesMsg(notes)
 }
 
-func (w *Widget) toggleTask(id string) tea.Cmd {
+func (w *Widget) toggleNote(id string) tea.Cmd {
 	return func() tea.Msg {
-		task := w.tasks[w.selected]
-		input := TaskInput{
-			Title:       task.Title,
-			Description: task.Description,
+		note := w.notes[w.selected]
+		input := NoteInput{
+			Content: note.Content,
+			Done:    !note.Done,
 		}
 
-		now := time.Now()
-		if task.CompletedAt == nil {
-			task.CompletedAt = &now
-		} else {
-			task.CompletedAt = nil
-		}
-
-		_, err := w.client.UpdateTask(id, input)
+		_, err := w.client.UpdateNote(id, input)
 		if err != nil {
 			return errorMsg(err)
 		}
-		return w.fetchTasks()
+		return w.fetchNotes()
 	}
 }
 
-func (w *Widget) deleteTask(id string) tea.Cmd {
+func (w *Widget) deleteNote(id string) tea.Cmd {
 	return func() tea.Msg {
-		if err := w.client.DeleteTask(id); err != nil {
+		if err := w.client.DeleteNote(id); err != nil {
 			return errorMsg(err)
 		}
-		return w.fetchTasks()
+		return w.fetchNotes()
 	}
 }
 
-func (w *Widget) createTask() tea.Msg {
-	input := TaskInput{
-		Title: "New Task",
+func (w *Widget) createNote() tea.Msg {
+	input := NoteInput{
+		Content: "New Note",
+		Done:    false,
 	}
-	_, err := w.client.CreateTask(input)
+	_, err := w.client.CreateNote(input)
 	if err != nil {
 		return errorMsg(err)
 	}
-	return w.fetchTasks()
+	return w.fetchNotes()
 }

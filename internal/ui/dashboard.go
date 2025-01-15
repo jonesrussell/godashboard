@@ -11,8 +11,8 @@ import (
 	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
+	"github.com/jonesrussell/dashboard/internal/ui/widgets/notes"
 	"github.com/jonesrussell/dashboard/internal/ui/widgets/sysinfo"
-	"github.com/jonesrussell/dashboard/internal/ui/widgets/tasks"
 )
 
 const (
@@ -91,6 +91,12 @@ type Dashboard struct {
 
 // NewDashboard creates a new dashboard instance
 func NewDashboard(log logger.Logger) *Dashboard {
+	if log == nil {
+		panic("logger cannot be nil")
+	}
+
+	log.Debug("Initializing dashboard")
+
 	return &Dashboard{
 		keys:     DefaultKeyMap,
 		help:     help.New(),
@@ -98,7 +104,7 @@ func NewDashboard(log logger.Logger) *Dashboard {
 		debug:    false,
 		logger:   log,
 		sysInfo:  sysinfo.New(),
-		tasks:    tasks.New(),
+		tasks:    notes.New(log),
 	}
 }
 
