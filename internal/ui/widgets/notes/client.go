@@ -80,22 +80,33 @@ type NoteInput struct {
 
 // ListNotes retrieves all tasks
 func (c *Client) ListNotes() ([]Note, error) {
-	resp, err := c.httpClient.Get(fmt.Sprintf("%s/api/v1/tasks", c.baseURL))
+	fmt.Printf("DEBUG: ListNotes - Making request to %s\n", c.baseURL)
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/api/v1/tasks", c.baseURL), nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to list tasks: %w", err)
+		fmt.Printf("DEBUG: ListNotes - Error creating request: %v\n", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		fmt.Printf("DEBUG: ListNotes - Error making request: %v\n", err)
+		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
+		fmt.Printf("DEBUG: ListNotes - Unexpected status code: %d\n", resp.StatusCode)
+		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
-	var tasks []Note
-	if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
+	var notes []Note
+	if err := json.NewDecoder(resp.Body).Decode(&notes); err != nil {
+		fmt.Printf("DEBUG: ListNotes - Error decoding response: %v\n", err)
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	return tasks, nil
+	fmt.Printf("DEBUG: ListNotes - Successfully decoded %d notes\n", len(notes))
+	return notes, nil
 }
 
 // CreateNote creates a new task
