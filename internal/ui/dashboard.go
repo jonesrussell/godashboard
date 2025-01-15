@@ -11,8 +11,8 @@ import (
 	"github.com/jonesrussell/dashboard/internal/logger"
 	"github.com/jonesrussell/dashboard/internal/ui/components"
 	"github.com/jonesrussell/dashboard/internal/ui/styles"
+	"github.com/jonesrussell/dashboard/internal/ui/widgets/notes"
 	"github.com/jonesrussell/dashboard/internal/ui/widgets/sysinfo"
-	"github.com/jonesrussell/dashboard/internal/ui/widgets/tasks"
 )
 
 const (
@@ -98,7 +98,7 @@ func NewDashboard(log logger.Logger) *Dashboard {
 		debug:    false,
 		logger:   log,
 		sysInfo:  sysinfo.New(),
-		tasks:    tasks.New(),
+		tasks:    notes.New(),
 	}
 }
 

@@ -1,4 +1,4 @@
-package tasks
+package notes
 
 import (
 	"bytes"
@@ -62,8 +62,8 @@ func NewClient(opts ...ClientOption) *Client {
 	return client
 }
 
-// Task represents a task from the godo API
-type Task struct {
+// Note represents a task from the godo API
+type Note struct {
 	ID          string     `json:"id"`
 	Title       string     `json:"title"`
 	Description string     `json:"description,omitempty"`
@@ -72,14 +72,14 @@ type Task struct {
 	CompletedAt *time.Time `json:"completed_at,omitempty"`
 }
 
-// TaskInput represents the input for creating/updating a task
-type TaskInput struct {
+// NoteInput represents the input for creating/updating a task
+type NoteInput struct {
 	Title       string `json:"title"`
 	Description string `json:"description,omitempty"`
 }
 
-// ListTasks retrieves all tasks
-func (c *Client) ListTasks() ([]Task, error) {
+// ListNotes retrieves all tasks
+func (c *Client) ListNotes() ([]Note, error) {
 	resp, err := c.httpClient.Get(fmt.Sprintf("%s/api/v1/tasks", c.baseURL))
 	if err != nil {
 		return nil, fmt.Errorf("failed to list tasks: %w", err)
@@ -90,7 +90,7 @@ func (c *Client) ListTasks() ([]Task, error) {
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-	var tasks []Task
+	var tasks []Note
 	if err := json.NewDecoder(resp.Body).Decode(&tasks); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -98,8 +98,8 @@ func (c *Client) ListTasks() ([]Task, error) {
 	return tasks, nil
 }
 
-// CreateTask creates a new task
-func (c *Client) CreateTask(input TaskInput) (*Task, error) {
+// CreateNote creates a new task
+func (c *Client) CreateNote(input NoteInput) (*Note, error) {
 	body, err := json.Marshal(input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal input: %w", err)
@@ -119,7 +119,7 @@ func (c *Client) CreateTask(input TaskInput) (*Task, error) {
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-	var task Task
+	var task Note
 	if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -127,8 +127,8 @@ func (c *Client) CreateTask(input TaskInput) (*Task, error) {
 	return &task, nil
 }
 
-// UpdateTask updates an existing task
-func (c *Client) UpdateTask(id string, input TaskInput) (*Task, error) {
+// UpdateNote updates an existing note
+func (c *Client) UpdateNote(id string, input NoteInput) (*Note, error) {
 	body, err := json.Marshal(input)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal input: %w", err)
@@ -154,7 +154,7 @@ func (c *Client) UpdateTask(id string, input TaskInput) (*Task, error) {
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
-	var task Task
+	var task Note
 	if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
@@ -162,8 +162,8 @@ func (c *Client) UpdateTask(id string, input TaskInput) (*Task, error) {
 	return &task, nil
 }
 
-// DeleteTask deletes a task
-func (c *Client) DeleteTask(id string) error {
+// DeleteNote deletes a note
+func (c *Client) DeleteNote(id string) error {
 	req, err := http.NewRequest(
 		http.MethodDelete,
 		fmt.Sprintf("%s/api/v1/tasks/%s", c.baseURL, id),
