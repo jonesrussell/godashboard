@@ -7,6 +7,9 @@ import (
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/jonesrussell/dashboard/internal/logger"
+	"github.com/jonesrussell/dashboard/internal/logger/types"
 )
 
 // Default configuration
@@ -20,6 +23,7 @@ const (
 type Client struct {
 	baseURL    string
 	httpClient *http.Client
+	logger     logger.Logger
 }
 
 // ClientOption allows configuring the client
@@ -39,6 +43,13 @@ func WithTimeout(timeout time.Duration) ClientOption {
 	}
 }
 
+// WithLogger sets the logger for the client
+func WithLogger(l logger.Logger) ClientOption {
+	return func(c *Client) {
+		c.logger = l
+	}
+}
+
 // NewClient creates a new godo API client
 func NewClient(opts ...ClientOption) *Client {
 	// Get base URL from environment or use default
@@ -47,11 +58,21 @@ func NewClient(opts ...ClientOption) *Client {
 		baseURL = defaultBaseURL
 	}
 
+	// Create default logger if none provided
+	defaultLogger, err := logger.New(logger.DefaultConfig())
+	if err != nil {
+		defaultLogger, _ = logger.NewZapLogger(types.Config{
+			Level:      "info",
+			OutputPath: "logs/client.log",
+		})
+	}
+
 	client := &Client{
 		baseURL: baseURL,
 		httpClient: &http.Client{
 			Timeout: defaultAPITimeout,
 		},
+		logger: defaultLogger,
 	}
 
 	// Apply options
@@ -80,39 +101,61 @@ type NoteInput struct {
 
 // ListNotes retrieves all tasks
 func (c *Client) ListNotes() ([]Note, error) {
-	fmt.Printf("DEBUG: ListNotes - Making request to %s\n", c.baseURL)
+	c.logger.Debug("Making notes request",
+		logger.NewField("url", c.baseURL),
+		logger.NewField("method", "GET"),
+		logger.NewField("path", "/api/v1/tasks"),
+	)
+
 	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/api/v1/tasks", c.baseURL), nil)
 	if err != nil {
-		fmt.Printf("DEBUG: ListNotes - Error creating request: %v\n", err)
+		c.logger.Error("Failed to create request",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
-		fmt.Printf("DEBUG: ListNotes - Error making request: %v\n", err)
+		c.logger.Error("Failed to make request",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to make request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		fmt.Printf("DEBUG: ListNotes - Unexpected status code: %d\n", resp.StatusCode)
+		c.logger.Error("Unexpected status code",
+			logger.NewField("status_code", resp.StatusCode),
+		)
 		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 
 	var notes []Note
 	if err := json.NewDecoder(resp.Body).Decode(&notes); err != nil {
-		fmt.Printf("DEBUG: ListNotes - Error decoding response: %v\n", err)
+		c.logger.Error("Failed to decode response",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
-	fmt.Printf("DEBUG: ListNotes - Successfully decoded %d notes\n", len(notes))
+	c.logger.Debug("Successfully decoded notes",
+		logger.NewField("count", len(notes)),
+	)
 	return notes, nil
 }
 
 // CreateNote creates a new task
 func (c *Client) CreateNote(input NoteInput) (*Note, error) {
+	c.logger.Debug("Creating note",
+		logger.NewField("title", input.Title),
+	)
+
 	body, err := json.Marshal(input)
 	if err != nil {
+		c.logger.Error("Failed to marshal input",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to marshal input: %w", err)
 	}
 
@@ -122,26 +165,47 @@ func (c *Client) CreateNote(input NoteInput) (*Note, error) {
 		bytes.NewReader(body),
 	)
 	if err != nil {
+		c.logger.Error("Failed to create note",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to create task: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
+		c.logger.Error("Unexpected status code",
+			logger.NewField("status_code", resp.StatusCode),
+			logger.NewField("status", resp.Status),
+		)
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
 	var task Note
 	if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
+		c.logger.Error("Failed to decode response",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
+	c.logger.Debug("Successfully created note",
+		logger.NewField("id", task.ID),
+	)
 	return &task, nil
 }
 
 // UpdateNote updates an existing note
 func (c *Client) UpdateNote(id string, input NoteInput) (*Note, error) {
+	c.logger.Debug("Updating note",
+		logger.NewField("id", id),
+		logger.NewField("title", input.Title),
+	)
+
 	body, err := json.Marshal(input)
 	if err != nil {
+		c.logger.Error("Failed to marshal input",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to marshal input: %w", err)
 	}
 
@@ -151,48 +215,81 @@ func (c *Client) UpdateNote(id string, input NoteInput) (*Note, error) {
 		bytes.NewReader(body),
 	)
 	if err != nil {
+		c.logger.Error("Failed to create request",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		c.logger.Error("Failed to update note",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to update task: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
+		c.logger.Error("Unexpected status code",
+			logger.NewField("status_code", resp.StatusCode),
+			logger.NewField("status", resp.Status),
+		)
 		return nil, fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
 	var task Note
 	if err := json.NewDecoder(resp.Body).Decode(&task); err != nil {
+		c.logger.Error("Failed to decode response",
+			logger.NewField("error", err),
+		)
 		return nil, fmt.Errorf("failed to decode response: %w", err)
 	}
 
+	c.logger.Debug("Successfully updated note",
+		logger.NewField("id", task.ID),
+	)
 	return &task, nil
 }
 
 // DeleteNote deletes a note
 func (c *Client) DeleteNote(id string) error {
+	c.logger.Debug("Deleting note",
+		logger.NewField("id", id),
+	)
+
 	req, err := http.NewRequest(
 		http.MethodDelete,
 		fmt.Sprintf("%s/api/v1/tasks/%s", c.baseURL, id),
 		nil,
 	)
 	if err != nil {
+		c.logger.Error("Failed to create request",
+			logger.NewField("error", err),
+		)
 		return fmt.Errorf("failed to create request: %w", err)
 	}
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		c.logger.Error("Failed to delete note",
+			logger.NewField("error", err),
+		)
 		return fmt.Errorf("failed to delete task: %w", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusNoContent {
+		c.logger.Error("Unexpected status code",
+			logger.NewField("status_code", resp.StatusCode),
+			logger.NewField("status", resp.Status),
+		)
 		return fmt.Errorf("unexpected status: %s", resp.Status)
 	}
 
+	c.logger.Debug("Successfully deleted note",
+		logger.NewField("id", id),
+	)
 	return nil
 }
