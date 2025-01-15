@@ -1,6 +1,9 @@
 {
-    "name": "Go",
+    "name": "Go Dashboard",
     "image": "mcr.microsoft.com/devcontainers/go:1-1.23-bookworm",
+    "mounts": [
+        "source=${localEnv:HOME}${localEnv:USERPROFILE}/.ssh,target=/home/vscode/.ssh,type=bind,consistency=cached"
+    ],
     "features": {
         "ghcr.io/devcontainers/features/common-utils:2": {
             "installZsh": true,
@@ -16,9 +19,25 @@
             "installDirectlyFromGitHubRelease": true,
             "version": "latest"
         },
-        "ghcr.io/guiyomh/features/golangci-lint:0": {
+        "ghcr.io/devcontainers/features/php:1": {
+            "version": "8.2",
+            "installComposer": true,
+            "xdebug": true
+        },
+        "ghcr.io/stuartleeks/dev-container-features/shell-history:0": {},
+        "ghcr.io/joshuanianji/devcontainer-features/github-cli-persistence:1": {},
+        "ghcr.io/devcontainers-extra/features/actions-runner:1": {
+            "version": "latest",
+            "dotnetVersion": "latest"
+        },
+        "ghcr.io/itsmechlark/features/act:1": {
             "version": "latest"
         },
-        "ghcr.io/joshuanianji/devcontainer-features/persistence:1": {}
+        "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+            "installDockerBuildx": true,
+            "installDockerComposeSwitch": true,
+            "version": "latest",
+            "dockerDashComposeVersion": "v2"
+        }
     }
 }
